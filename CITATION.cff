@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use this model or its outputs, please cite it as below."
+title: "Kandy PM2.5 — Additive Decomposition Model"
+abstract: >-
+  A physically-structured spatiotemporal PM2.5 model for the Kandy basin,
+  Sri Lanka, at 1 km hourly resolution (2019-2023). It separates the regional
+  and transboundary background from a terrain-shaped, locally-generated
+  increment, combining a gradient-boosted temporal anchor, satellite emission
+  patterns, a congestion-weighted traffic source, terrain confinement, and
+  WindNinja diagnostic winds, with calibrated uncertainty and a
+  population-exposure / health-burden layer.
+type: software
+authors:
+  - family-names: Alahakoon
+    given-names: Daminda
+    affiliation: "University of Peradeniya"
+repository-code: "https://github.com/daminda1108/kandy_pm25_model"
+url: "https://github.com/daminda1108/kandy_pm25_model"
+license: MIT
+version: "1.0.0"
+date-released: "2026-06-07"
+keywords:
+  - PM2.5
+  - air quality
+  - Kandy
+  - Sri Lanka
+  - spatiotemporal estimation
+  - atmospheric science
+  - remote sensing
+  - uncertainty quantification

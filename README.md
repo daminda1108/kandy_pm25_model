@@ -1,5 +1,9 @@
 # Kandy PM2.5 — Additive Decomposition Model
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+![Python](https://img.shields.io/badge/python-3.11-blue.svg)
+![Status](https://img.shields.io/badge/status-research-orange.svg)
+
 A physically-structured spatiotemporal PM2.5 model for the Kandy basin, Sri Lanka,
 at 1 km hourly resolution for 2019–2023, with calibrated uncertainty and a
 population-exposure / health-burden layer.
@@ -75,3 +79,15 @@ full rebuild from raw satellite / reanalysis inputs is out of scope for this rel
 Extracted from the research project `kandy_pm25` (D. Alahakoon, University of
 Peradeniya). The full development history, validation record, and the exploratory
 work that motivated this model live in the parent repository.
+
+## Citation
+
+If you use this model or its outputs, please cite it (see `CITATION.cff`, or use
+GitHub's "Cite this repository" button):
+
+> Alahakoon, D. (2026). *Kandy PM2.5 — Additive Decomposition Model* (Version 1.0.0)
+> [Software]. https://github.com/daminda1108/kandy_pm25_model
+
+## License
+
+Released under the [MIT License](LICENSE).
