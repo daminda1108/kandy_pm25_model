@@ -1,0 +1,18 @@
+# ── Data, results, tooling — never tracked (regenerated from code) ──
+/data/
+/results/
+/tools/
+
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# ── OS / editor ──
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

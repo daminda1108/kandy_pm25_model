@@ -1,0 +1,27 @@
+# Kandy PM2.5 additive-decomposition model — runtime dependencies
+# (the model runs fully locally; no GPU / PyTorch / Kaggle needed)
+
+# core numerics + IO
+numpy
+pandas
+pyarrow            # parquet engine for pandas
+scipy
+xarray
+
+# modelling
+lightgbm           # lag-free T(t) temporal anchor
+networkx           # road-network centrality (traffic emission source)
+
+# plotting
+matplotlib
+scienceplots
+cmocean
+
+# geospatial (figures + terrain/OSM)
+osmnx              # OSM roads/river/places for the study-area basemap
+geopandas
+shapely
+pyproj
+rasterio           # DEM / GeoTIFF IO
+cartopy            # locator inset + graticule
+contextily         # basemap tiles (F1)
