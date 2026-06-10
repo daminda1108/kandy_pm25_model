@@ -55,10 +55,26 @@ data/  results/             intermediate artifacts + outputs (gitignored)
 config.py                   constants and paths
 ```
 
-## Running it
+## Install
+
+Tested on Python 3.11. From the repository root:
 
 ```bash
-# render the publication figure suite (F1–F13)
+python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+The figure suite pulls OSM layers (roads / river / places) for the study-area
+basemap on first run and caches them under `data/processed/decomp/osm_kandy/`, so
+the first render needs network access; later runs work offline. Rendering the full
+F1–F13 suite takes a few minutes on a laptop CPU; a single nowcast is seconds.
+
+## Running it
+
+All commands are run from the repository root.
+
+```bash
+# render the publication figure suite (F1–F13) → results/figures/paper_figures/
 python kandymodel/viz/paper_figures.py --figs all
 
 # single-hour nowcast for any hour in the record

@@ -1,6 +1,12 @@
 """
-build_traffic_tomtom.py — Stage 2: calibrate the OSM congestion proxy against
-MEASURED TomTom traffic, and build the measured congestion layer (2026-06-04).
+traffic_tomtom.py — OPTIONAL: calibrate the OSM congestion proxy against MEASURED
+TomTom traffic, and build a measured congestion layer.
+
+NOT part of the production chain. TomTom has no traffic-flow coverage in Sri Lanka
+(verified: the Amsterdam control returns segments, Colombo + Kandy return none), so
+for Kandy this exits cleanly with no output and the model falls back to the OSM
+betweenness proxy as a literature-bounded prior (kandymodel/emission/traffic.py).
+Kept as a runnable hook for any city where TomTom flow IS available.
 
 TomTom Flow Segment Data (free tier) returns current vs free-flow speed at a point.
 We sample it at OSM main-road segment midpoints (guaranteed on-road), forming a
@@ -8,11 +14,11 @@ measured congestion ratio  cong = 1 − currentSpeed/freeFlowSpeed  per location
   1. rasterise measured congestion → the decomp grid,
   2. regress the OSM betweenness-proxy congestion against TomTom (does the proxy
      predict where the real jams are?) → a calibration scale + the right temper,
-  3. write the CALIBRATED traffic-emission surface used by the model.
+  3. write the calibrated traffic-emission surface.
 
-Key is read from API.txt at runtime (never stored). Respects the free-tier rate
-limit with a small delay; samples only the higher road classes where congestion
-matters. Run in background — ~hundreds of HTTP calls.
+The API key is read from the TOMTOM_API_KEY environment variable (never stored).
+Respects the free-tier rate limit with a small delay; samples only the higher road
+classes where congestion matters. ~hundreds of HTTP calls.
 
 Out: data/processed/decomp/tomtom_congestion_kandy.parquet (per-point measured)
      data/processed/decomp/S_traffic_calibrated_kandy.npz (calibrated surface)
@@ -20,7 +26,7 @@ Out: data/processed/decomp/tomtom_congestion_kandy.parquet (per-point measured)
 """
 from __future__ import annotations
 import json
-import re
+import os
 import sys
 import time
 import urllib.request
@@ -48,12 +54,10 @@ DELAY = 0.12              # s between calls
 
 
 def _key():
-    for line in open(REPO.parent / "API.txt", encoding="utf-8", errors="ignore"):
-        if "tomtom" in line.lower():
-            toks = [t for t in re.findall(r"[A-Za-z0-9_-]{20,}", line) if t.lower() != "tomtom"]
-            if toks:
-                return max(toks, key=len)
-    raise RuntimeError("no TomTom key in API.txt")
+    key = os.environ.get("TOMTOM_API_KEY", "").strip()
+    if key:
+        return key
+    raise RuntimeError("set the TOMTOM_API_KEY environment variable to run TomTom calibration")
 
 
 def _flow(lat, lon, key):

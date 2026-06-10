@@ -18,8 +18,10 @@ Out: data/processed/pinn_inputs/windninja_library.npz
      u,v : (16 dir, 2 speed, 2 regime, 64, 64)  + dirs, speeds, regimes, lats, lons
 """
 from __future__ import annotations
+import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import numpy as np
@@ -28,9 +30,14 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 from config import KANDY_PINN_BBOX as BB
 
-CLI = Path("d:/ProjectCD/tools/wn/bin/WindNinja_cli.exe")
+# NOTE: this is a DEV-ONLY rebuild utility. The wind library it produces
+# (windninja_library.npz) is already shipped under data/processed/pinn_inputs/,
+# so the model and figures run without it. Re-running this needs a local
+# WindNinja 3.x install (not bundled): point WINDNINJA_CLI at the executable
+# (and optionally WINDNINJA_WORKDIR at a scratch dir) before invoking.
+CLI = Path(os.environ.get("WINDNINJA_CLI", "WindNinja_cli"))
 DEM = REPO / "data" / "processed" / "pinn_inputs" / "kandy_dem_utm44n_90m.tif"
-WORK = Path("d:/ProjectCD/tools/wn_lib")
+WORK = Path(os.environ.get("WINDNINJA_WORKDIR", Path(tempfile.gettempdir()) / "wn_lib"))
 OUT = REPO / "data" / "processed" / "pinn_inputs" / "windninja_library.npz"
 
 N = 64
