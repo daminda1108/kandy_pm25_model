@@ -40,6 +40,10 @@ DEC = REPO / "data" / "processed" / "decomp"
 TANCHOR = REPO / "data" / "processed" / "stage1_v3" / "T_anchor"
 GHAP = DEC / "ghap_kandy_monthly_2019_2022.parquet"
 YEARS = list(range(2019, 2024))
+# Ventilated-hour pattern floor (additive_v3). 0.0 reproduces the locked _additive
+# tier byte-for-byte; the shipped explorer uses the Kandy method-transfer value 2.573
+# (Medellin-fitted, cross-city relative form). See assemble_year() + model reference IV.
+EPS_FLOOR = 0.0
 KOALA_FLOOR = 24.5225
 RIDGE_OBS = 10.5
 NIFS = (7.2839, 80.6322)          # KOALA floor/core point
@@ -83,9 +87,27 @@ def assemble_year(year: int):
     P = m["pm25_q50"] / m["T50"]
     out = m[["time", "lat", "lon"]].copy()
 
+    # Ventilated-hour pattern FLOOR (additive_v3, 2026-07-21). The increment-split
+    # renders well-ventilated hours (inc <= 0) as a perfectly flat field, but Medellin
+    # ground truth keeps real spatial spread on exactly those hours (station std ~5.7
+    # ug/m3, relative 0.68 > structured 0.42). A mean-zero pattern floor keeps a muted
+    # local pattern where the accumulation amplitude is below eps0:
+    #     PM = B + max(max(inc,0), eps0)*P + min(inc,0) - max(0, eps0 - max(inc,0)).
+    # Mean-zero by construction -> basin mean (T-lock) preserved EXACTLY; eps0 >= 0 with
+    # the accumulation-side P -> core stays >= edge (no core<periphery inversion);
+    # structured hours (inc >= eps0) are IDENTICAL to the plain split. eps0=0 reproduces
+    # the locked _additive tier byte-for-byte; the shipped explorer uses the Kandy value
+    # eps0 = 2.573 ug/m3, transferred from a Medellin fit via the cross-city relative
+    # form (0.398 x mean accumulation amplitude) -- a disclosed method transfer, same
+    # status as the B2 wind port. Gated in flat_hour_residual_fit.py (holdout-6 flat-hour
+    # RMSE 8.53->7.99, cross-city no-degrade). See model reference section IV + ledger F.
+    eps0 = float(EPS_FLOOR)
+
     def split(Tq, Bq):
         inc = Tq - Bq
-        return Bq + np.maximum(inc, 0.0) * P + np.minimum(inc, 0.0)
+        a = np.maximum(inc, 0.0)
+        return Bq + np.maximum(a, eps0) * P + np.minimum(inc, 0.0) \
+            - np.maximum(eps0 - a, 0.0)
     out["pm25_q50"] = split(m["T50"], m["B"])
     out["pm25_q05"] = split(m["T05"], m["B"]).clip(lower=0.0)
     out["pm25_q95"] = split(m["T95"], m["B"])
