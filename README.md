@@ -15,8 +15,29 @@ exploratory PINN / cross-city ConvCNP / analogue-finder work that preceded it.
 ## The model
 
 ```
-PM(x, y, t) = B(t) + [ T(t) − B(t) ] · P_local(x, y, t)
+inc  = T(t) − B(t)
+PM(x, y, t) = B(t) + max( max(inc, 0), ε ) · P_local(x, y, t)
+                   + min(inc, 0)  −  max( 0, ε − max(inc, 0) )
 ```
+
+The two correction terms beyond the plain `B + inc·P_local` form are deliberate and
+each fixes a defect that ground truth exposed:
+
+- the **increment split** (`max(inc,0)` / `min(inc,0)`) — when the hourly total dips
+  below the daily-resolution background (deep midday mixing, ~38 % of hours), the plain
+  form multiplies a core-high pattern by a *negative* increment and renders the city
+  core **cleaner** than the rural edge. The split lets the pattern structure only the
+  accumulation above background; ventilation below it is spatially uniform.
+- the **ventilated-hour floor ε** — the split alone renders those hours perfectly flat,
+  but Medellín's withheld network keeps real spatial spread on exactly those hours.
+  ε is mean-zero by construction, so the basin mean (the T-lock) is preserved
+  *exactly*, and ε ≥ 0 with an accumulation-side pattern means the core can never fall
+  below the edge. Validated at Medellín on stations never used to fit it
+  (flat-hour RMSE 8.53 → 8.00). Default `EPS_FLOOR = 2.573` (the shipped Kandy value,
+  a disclosed method transfer); set `KANDY_EPS_FLOOR=0` to reproduce the paper tier.
+
+Both collapse to the plain form wherever the increment is healthy, so structured hours
+are unchanged.
 
 - **B(t)** — regional and transboundary background (horizontally uniform per hour):
   a rural Van Donkelaar floor scaled by the GEOS-CF daily seasonal shape. The local
@@ -24,7 +45,14 @@ PM(x, y, t) = B(t) + [ T(t) − B(t) ] · P_local(x, y, t)
   source-apportionment literature.
 - **T(t)** — the basin temporal anchor: a lag-free gradient-boosted series on
   exogenous drivers, conformal-wrapped, re-anchored per year to the Van Donkelaar
-  area mean and amplitude-sharpened to the observed local diurnal/seasonal swing.
+  area mean, then amplitude-sharpened. Be precise about what depends on local data
+  here: the annual **level** uses **no local measurement** (satellite only), whereas
+  the diurnal/seasonal **amplitude** is calibrated against two local research
+  low-cost sensors — the model trains on their record and its climatological swing is
+  matched to theirs, because a lag-free learner otherwise damps the daily cycle by
+  ~15 %. Those sensors are not a public, retrievable series, but they are local. The
+  evidence that the *method* recovers the shape without them is the transfer result
+  across the analogue-city panel, not this field.
 - **P_local** — a unit-mean spatial pattern (so the basin mean is preserved exactly):
   the normalised product of emission structure (Van Donkelaar surface + a
   congestion-weighted traffic source), boundary-layer-scaled terrain confinement, and

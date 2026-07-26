@@ -26,6 +26,7 @@ Out: kandy_decomp_predictions_{year}_additive.parquet   (time, lat, lon, q05/q50
      additive_phase2_gates.csv / .txt summary
 """
 from __future__ import annotations
+import os
 import sys
 from pathlib import Path
 
@@ -40,10 +41,19 @@ DEC = REPO / "data" / "processed" / "decomp"
 TANCHOR = REPO / "data" / "processed" / "stage1_v3" / "T_anchor"
 GHAP = DEC / "ghap_kandy_monthly_2019_2022.parquet"
 YEARS = list(range(2019, 2024))
-# Ventilated-hour pattern floor (additive_v3). 0.0 reproduces the locked _additive
-# tier byte-for-byte; the shipped explorer uses the Kandy method-transfer value 2.573
-# (Medellin-fitted, cross-city relative form). See assemble_year() + model reference IV.
-EPS_FLOOR = 0.0
+# Ventilated-hour pattern floor (additive_v3) — see assemble_year() + model reference IV.
+#
+# DEFAULT = the SHIPPED PRODUCTION VALUE (2.573 ug/m3 for Kandy), so a clone of this
+# repo reproduces the model the public explorer actually serves. The value is a
+# disclosed METHOD TRANSFER: fitted at Medellin against its withheld network
+# (flat-hour RMSE 8.531 -> 8.004 on the never-touched holdout-6) and carried to Kandy
+# through the cross-city relative form, 0.398 x the mean accumulation amplitude
+# (0.398 x 6.465 = 2.573). Kandy has no local network, so it cannot be fitted here.
+#
+# Set KANDY_EPS_FLOOR=0 to reproduce the PAPER tier byte-for-byte (the preprint's
+# figures and its "about 425 deaths" are computed at eps=0; the shipped tier gives
+# 427, a 0.5% exposure difference against a [229, 625] interval).
+EPS_FLOOR = float(os.environ.get("KANDY_EPS_FLOOR", 2.573))
 KOALA_FLOOR = 24.5225
 RIDGE_OBS = 10.5
 NIFS = (7.2839, 80.6322)          # KOALA floor/core point
