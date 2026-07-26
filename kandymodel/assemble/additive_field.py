@@ -237,6 +237,13 @@ def main():
     # regional (so f drops). Basis: AAQR 2022 (Kandy COVID lockdown Mar-May 2020,
     # PM2.5 -54% in-window) + AGU 2022 / Sri Lanka 2021-22 fuel & economic crisis
     # (severe traffic collapse, worst ~2022). Mean ≈ 0.24 ≈ source apportionment.
+    # Local fraction f, per year. STATUS: a PRIOR, not fitted — the weakest number in
+    # the chain, disclosed as such in the preprint (Section 8). The literature gives the
+    # level; the year-to-year variation is REASONED (2020 pandemic, 2021-22 fuel crisis),
+    # not inferred. Independent SBI posterior: f=0.181 [0.10,0.27], so these sit at or
+    # above its centre and 2019 (0.28) lies just outside its upper bound. Consequence is
+    # small by construction: the field is T-locked, so the area mean is EXACTLY invariant
+    # to f and exposure/burden move <2% across the plausible band.
     FRAC_LOCAL_YEAR = {2019: 0.28, 2020: 0.25, 2021: 0.21, 2022: 0.20, 2023: 0.27}
     f_mean = float(np.mean([FRAC_LOCAL_YEAR[y] for y in YEARS]))
     pats, basins = _annual_mult_pattern()
