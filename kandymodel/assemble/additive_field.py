@@ -260,6 +260,31 @@ def main():
     #      them is not.
     # Consequence remains small by construction: the field is T-locked, so the area mean
     # is EXACTLY invariant to f and exposure/burden move <2% across the plausible band.
+    #
+    # FINAL STATUS 2026-08-07 (ledger F.40/F.41) — eight distinct routes to identifying this
+    # split have now been pre-registered and have each failed on criteria set in advance:
+    # five background reconstructions, an hourly reference partition at the validation-panel
+    # cities (3 of 10 cities passed, 5 required), a daily one (4 of 10), and the coarse-CTM
+    # urban-increment approach standard in Europe (a 0.25 deg chemistry model used as the
+    # background puts B > T in 60% of hours, because its scaling was calibrated to TOTAL
+    # observed PM rather than to background). A standing rule follows: no further
+    # reformulation without new measurement.
+    #
+    # What IS claimable:
+    #   * the ANNUAL level to about +/-0.1, from three convergent independent lines --
+    #     coherence floor >= 0.41, hierarchical fit 0.392 [0.258, 0.525] with Kandy held out,
+    #     and a national low-cost-network instrument at 0.446;
+    #   * the SEASONAL SHAPE qualitatively -- the fraction swings by about 1.66x within a
+    #     year at panel cities, stable across temporal resolution, so a per-year constant is
+    #     physically inadequate even though its level cannot be pinned this way.
+    # What is NOT:
+    #   * a validated time-varying f -- not for want of an estimator, but for want of
+    #     anything credible to score one against;
+    #   * an HOURLY split, which appears close to unidentifiable in principle. B > T in 28.5%
+    #     of hours here was long assumed to be a defect of this construction. It is not:
+    #     references built from real, dense monitoring networks at other cities incur the same
+    #     pathology in 13-25% of hours and 7-25% of days.
+    # The decisive input is a single monitor upwind of, or inside, the basin.
     FRAC_LOCAL_YEAR = {2019: 0.28, 2020: 0.25, 2021: 0.21, 2022: 0.20, 2023: 0.27}
     f_mean = float(np.mean([FRAC_LOCAL_YEAR[y] for y in YEARS]))
     pats, basins = _annual_mult_pattern()
