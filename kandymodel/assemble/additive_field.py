@@ -286,6 +286,16 @@ def main():
     #     pathology in 13-25% of hours and 7-25% of days.
     # The decisive input is a single monitor upwind of, or inside, the basin.
     FRAC_LOCAL_YEAR = {2019: 0.28, 2020: 0.25, 2021: 0.21, 2022: 0.20, 2023: 0.27}
+    # SUPERSEDED 2026-08-10 by the COHERENCE CAP (ledger F.43). These per-year values are
+    # retained only as the pre-cap record. The shipped background is now additionally capped
+    # at (1 - F_MIN) x the day's MINIMUM total, F_MIN = 0.02, because local sources emit
+    # continuously and therefore B <= T must hold at EVERY hour: a background at or above
+    # the total is not a physical state, it is an over-estimated background. Uncapped, that
+    # was violated on ~25% of hours, rendering the field flat and reporting a zero local
+    # share at the traffic core. After the cap the effective annual local fraction is ~0.48,
+    # and it is almost independent of F_MIN (0.477 at 0.00 to 0.502 at 0.08), so it is set
+    # by the physical constraint rather than by the parameter. Basin means, exposure and
+    # burden are unchanged -- the field is T-locked.
     f_mean = float(np.mean([FRAC_LOCAL_YEAR[y] for y in YEARS]))
     pats, basins = _annual_mult_pattern()
     target = ghap_decile_contrast()
