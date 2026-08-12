@@ -31,7 +31,7 @@ from config import KANDY_PINN_BBOX as BB
 
 DEC = REPO / "data" / "processed" / "decomp"
 TRO = REPO / "data" / "raw" / "tropomi"
-from kandymodel.viz.style import PUB_OUT as OUT  # publication style + folder
+from kandymodel.viz.style import FIG_OUT as OUT  # figure style + output folder
 CEN = (7.2906, 80.6337)
 
 

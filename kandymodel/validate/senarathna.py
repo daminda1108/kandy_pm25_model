@@ -65,7 +65,7 @@ SENARATHNA_HOURLY = {h: SENARATHNA_BASELINE_00 + c
 
 # ── Senarathna Table 3 — monthly variation (µg/m³, December = 17.76 ref) ──
 # Exact regression coefficients from Senarathna et al. 2024 Table 3 (CJS 53(2)).
-# (Verified against the paper 2026-05-29; prior May–Nov values were mis-transcribed
+# (Verified against the technical reference 2026-05-29; prior May–Nov values were mis-transcribed
 #  "approx from paper" — audit E5.)
 SENARATHNA_MONTHLY_REF_DEC = 17.76
 SENARATHNA_MONTHLY_COEF = {

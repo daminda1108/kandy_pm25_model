@@ -1,5 +1,5 @@
 """
-plot_style.py — Shared publication-quality matplotlib style for Kandy PM2.5.
+plot_style.py — Shared print-quality matplotlib style for Kandy PM2.5.
 
 Provides:
   apply_style()     — apply SciencePlots + custom rcParams globally
@@ -150,7 +150,7 @@ def save_figure(
     Args:
         fig:     matplotlib Figure
         name:    filename stem (no extension)
-        out_dir: output directory; defaults to results/figures/publication/
+        out_dir: output directory; defaults to results/figures/
         dpi:     raster resolution for PNG
         formats: tuple of format strings, e.g. ("pdf", "png")
 
@@ -159,9 +159,9 @@ def save_figure(
     """
     if out_dir is None:
         try:
-            out_dir = Path(__file__).parents[2] / "results" / "figures" / "publication"
+            out_dir = Path(__file__).parents[2] / "results" / "figures"
         except Exception:
-            out_dir = Path("results/figures/publication")
+            out_dir = Path("results/figures")
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 

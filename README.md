@@ -56,46 +56,48 @@ The whole field, rebuilt from the inputs in `data/`:
 python scripts/regenerate_all.py
 ```
 
-The publication figure suite:
-
-```bash
-python kandymodel/viz/paper_figures.py --figs all
-```
-
-The first figure render fetches OpenStreetMap basemap layers and caches them, so it needs
-network access once. Everything else runs offline.
+Map rendering fetches OpenStreetMap basemap layers on first use and caches them, so that
+step needs network access once. Everything else runs offline.
 
 ---
 
-## The model
+## Model formulation
 
-Concentration is a regional background plus a locally-structured increment:
+Let `T(t)` denote the basin-mean concentration at hour `t`, `B(t)` the regional and
+transboundary background, taken horizontally uniform over the domain, and
+`P_local(x, y, t)` a dimensionless local pattern normalised to unit spatial mean. Writing
+the local increment as `inc(t) = T(t) − B(t)`, concentration on the 1 km grid is
 
 ```
-inc = T(t) − B(t)
-
 PM(x, y, t) = B(t) + max( max(inc, 0), ε ) · P_local(x, y, t)
                    + min(inc, 0) − max( 0, ε − max(inc, 0) )
 ```
 
-- **`T(t)`** — the basin temporal anchor. A lag-free gradient-boosted series on exogenous
-  drivers, conformal-wrapped, re-anchored each year to a satellite area mean.
-- **`B(t)`** — the regional and transboundary background, horizontally uniform per hour.
-- **`P_local`** — the spatial pattern, normalised to **unit spatial mean**: the product of a
-  road-network emission surface, terrain confinement, and transport along mass-consistent
-  diagnostic winds over the real topography.
+**Terms.**
 
-**The unit-mean normalisation is the load-bearing constraint.** It means the basin average
-returns `T(t)` exactly, so the level and the pattern are separately identifiable and can be
-validated independently. Everything the model claims rests on that separation.
+| symbol | quantity | derivation |
+|---|---|---|
+| `T(t)` | basin temporal anchor | gradient-boosted regression on exogenous drivers, lag-free, conformal-wrapped, re-anchored annually to a satellite area mean |
+| `B(t)` | regional background | rural satellite floor scaled by a daily regional shape, constrained so that `B ≤ T` at every hour |
+| `P_local` | local spatial pattern | normalised product of a road-network emission surface, boundary-layer-scaled terrain confinement, and advection–dispersion along mass-consistent diagnostic winds |
+| `ε` | ventilated-hour floor | bounded, mean-zero pattern retention on hours where the accumulation term is negligible |
 
-The two correction terms beyond the plain `B + inc·P_local` form each fix a defect that
-ground truth exposed. The **increment split** stops the model rendering the city core
-*cleaner* than the rural edge when the hourly total dips below the daily-resolution
-background. The **ventilated-hour floor `ε`** stops those hours rendering perfectly flat,
-which withheld stations at Medellín show they are not. Both are mean-zero or
-accumulation-side by construction, so the basin mean is preserved exactly and structured
-hours are unchanged.
+**The unit-mean constraint.** Since `P_local` integrates to unity over the domain, the
+spatial average of the field returns `T(t)` exactly. The pattern therefore redistributes
+concentration within the basin without altering the total specified by the anchor. This
+gauge condition is what renders the level and the pattern separately identifiable, and it
+is the basis on which each is validated independently.
+
+**The two correction terms** beyond the elementary form `B + inc · P_local` are not
+cosmetic. The increment split, `max(inc, 0)` and `min(inc, 0)`, prevents the pattern being
+applied to a negative increment: when the hourly total falls below the daily-resolution
+background, an elementary product renders the emission core *cleaner* than the rural
+periphery. Structuring only the accumulation above background, and treating ventilation
+below it as spatially uniform, removes that inversion. The floor `ε` addresses the
+complementary case, in which the split alone renders well-mixed hours perfectly uniform;
+withheld stations at Medellín show measurable spatial variance on precisely those hours.
+Both terms are mean-zero or accumulation-side by construction, so the basin mean is
+preserved exactly and hours with a healthy increment are numerically unchanged.
 
 ### The regional/local split
 
@@ -204,7 +206,7 @@ kandymodel/            the model package
 ├── exposure.py        population weighting
 ├── health.py          GEMM attributable burden
 ├── validate/          cross-checks against independent products
-└── viz/               figure suite (F1–F13), styling, basemap
+└── viz/               map rendering, styling, figure helpers
 scripts/               regenerate_all, nowcast, and build steps
 data/                  derived inputs (tracked) · outputs (regenerated)
 evidence/              pre-registrations, epistemic ledger, result artifacts
@@ -237,4 +239,4 @@ source.
 ---
 
 *Undergraduate thesis, Department of Environmental Sciences, University of Peradeniya.
-Supervisors: Dr. U. Ranathunge, Dr. M. Dehideniya.*
+Supervisors: Dr. U. Ranatunga, Dr. M. Dehideniya.*

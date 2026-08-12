@@ -1,7 +1,7 @@
 """
 precompute_climatology.py — cache temporal + spatial climatology from the
 2019-2023 decomposition maps (each year on its own real VanD level), so the
-publication figures/tables are fast and mutually consistent.
+figure and table outputs are fast and mutually consistent.
 
 Output: data/processed/decomp/climatology.npz with
   temporal (basin spatial-mean): diurnal[yr,24], weekly[yr,7], monthly[yr,12],

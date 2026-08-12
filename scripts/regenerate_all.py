@@ -3,7 +3,7 @@
 Runs the locked chain in order, from the provided intermediate artifacts:
 
     T(t) anchor -> sharpen -> decomp map -> transport overlay -> spatial UQ
-      -> additive field -> exposure -> health -> figures
+      -> additive field -> exposure -> health
 
 The static source grids (S_emit, M-confinement, S_traffic, the WindNinja wind
 library) are shipped prebuilt under data/processed/; they are NOT rebuilt here
@@ -13,7 +13,6 @@ release. Pass --from-anchor to also re-derive T(t) from the inference grids.
 Usage:
     python scripts/regenerate_all.py                 # from provided T(t)
     python scripts/regenerate_all.py --from-anchor   # also rebuild T(t)
-    python scripts/regenerate_all.py --figs-only      # just re-render figures
 """
 from __future__ import annotations
 import argparse
@@ -37,11 +36,9 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--from-anchor", action="store_true",
                     help="also re-derive T(t) from the inference grids")
-    ap.add_argument("--figs-only", action="store_true",
-                    help="skip the build chain, just re-render the figure suite")
     a = ap.parse_args()
 
-    if not a.figs_only:
+    if True:
         if a.from_anchor:
             for y in YEARS:
                 run(f"T(t) anchor {y}", "kandymodel/anchor/predict_anchor.py", "--year", str(y))
@@ -55,7 +52,6 @@ def main() -> int:
         run("health burden (GEMM)", "kandymodel/health.py")
         run("seasonal + episodic fields", "scripts/build_seasonal_episodic_fields.py")
 
-    run("publication figure suite F1-F13", "kandymodel/viz/paper_figures.py", "--figs", "all")
     print("\nALL DONE — outputs under data/processed/decomp/ and results/figures/")
     return 0
 

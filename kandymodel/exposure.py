@@ -36,7 +36,7 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 DEC = REPO / "data" / "processed" / "decomp"
 PIN = REPO / "data" / "processed" / "pinn_inputs"
-from kandymodel.viz.style import PUB_OUT as OUT  # publication style + folder
+from kandymodel.viz.style import FIG_OUT as OUT  # figure style + output folder
 OUT.mkdir(parents=True, exist_ok=True)
 KOALA_FLOOR = 24.52
 KOALA_YEAR = 2019        # KOALA 24.5 is the Jan-Dec 2019 annual mean only (Senarathna 2024,

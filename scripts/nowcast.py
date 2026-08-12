@@ -11,7 +11,7 @@ Panels:  (a) the PM2.5 field + WindNinja flow + emission-intensity contours + la
          (d) conditions + additive decomposition (regional B vs local increment) readout
 
 Run:  python scripts/nowcast_figure.py  [--ts "2022-01-01 07:00"]
-Out:  results/figures/paper_figures/NOWCAST_<ts>.png
+Out:  results/figures/NOWCAST_<ts>.png
 """
 from __future__ import annotations
 import argparse

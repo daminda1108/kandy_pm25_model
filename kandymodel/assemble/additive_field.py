@@ -50,7 +50,7 @@ YEARS = list(range(2019, 2024))
 # through the cross-city relative form, 0.398 x the mean accumulation amplitude
 # (0.398 x 6.465 = 2.573). Kandy has no local network, so it cannot be fitted here.
 #
-# Set KANDY_EPS_FLOOR=0 to reproduce the PAPER tier byte-for-byte (the preprint's
+# Set KANDY_EPS_FLOOR=0 to reproduce the PAPER tier byte-for-byte (the accompanying write-up's
 # figures and its "about 425 deaths" are computed at eps=0; the shipped tier gives
 # 427, a 0.5% exposure difference against a [229, 625] interval).
 EPS_FLOOR = float(os.environ.get("KANDY_EPS_FLOOR", 2.573))
@@ -238,7 +238,7 @@ def main():
     # PM2.5 -54% in-window) + AGU 2022 / Sri Lanka 2021-22 fuel & economic crisis
     # (severe traffic collapse, worst ~2022). Mean ≈ 0.24 ≈ source apportionment.
     # Local fraction f, per year. STATUS: a PRIOR, not fitted — the weakest number in
-    # the chain, disclosed as such in the preprint (Section 8).
+    # the chain, disclosed as such in the accompanying write-up (Section 8).
     #
     # ⚠ UPDATED 2026-08-07 (epistemic ledger F.22/F.35). Two corrections to what this
     # comment used to claim:

@@ -1,5 +1,5 @@
 """build_seasonal_episodic_fields.py — per-season wind-resolved dispersion patterns +
-an episodic worst-case accumulation field, for the publication figures (2026-06-06).
+an episodic worst-case accumulation field, for the figures (2026-06-06).
 
 Motivation (user): the seasonal figures looked flat — the NE↔SW monsoon wind reversal
 and the calm-season terrain entrapment of the Hantana-enclosed core were not visible,

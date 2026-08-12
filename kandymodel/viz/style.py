@@ -1,12 +1,12 @@
 """
-pubfig.py — publication-grade matplotlib style + output folder for the final-model
+figstyle.py — print-quality matplotlib style + output folder for the final-model
 figure suite (2026-06-05). Importing this module applies the style globally.
 
 Style: SciencePlots 'science' base (thin axes, inward minor ticks, tight) WITHOUT
 the LaTeX engine (robust to the suite's unicode labels µg m⁻³, PM₂.₅, °N), with
 STIX (Times-like) text+math fonts for a journal-standard serif look. 400 dpi.
 
-All figures render to results/figures/publication/ (a fresh, dedicated folder).
+All figures render to results/figures/.
 """
 from __future__ import annotations
 from pathlib import Path
@@ -15,8 +15,8 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 REPO = Path(__file__).resolve().parents[2]
-PUB_OUT = REPO / "results" / "figures" / "publication"
-PUB_OUT.mkdir(parents=True, exist_ok=True)
+FIG_OUT = REPO / "results" / "figures"
+FIG_OUT.mkdir(parents=True, exist_ok=True)
 
 
 def apply() -> None:
@@ -35,7 +35,7 @@ def apply() -> None:
         "savefig.dpi": 400, "figure.dpi": 120,
         "savefig.bbox": "tight", "savefig.pad_inches": 0.03,
         "figure.facecolor": "white", "savefig.facecolor": "white",
-        # type sizes (publication)
+        # type sizes
         "font.size": 8.5, "axes.titlesize": 9.0, "axes.labelsize": 8.5,
         "xtick.labelsize": 7.5, "ytick.labelsize": 7.5, "legend.fontsize": 7.0,
         "figure.titlesize": 10.5,

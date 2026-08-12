@@ -1,11 +1,10 @@
 """
-paperfig.py — shared helpers for the publication paper-figure suite (2026-06-05).
-Plan: docs/paper_figures_plan_2026-06-05.md.
+helpers.py — shared figure helpers: layout, colour norms, save.
 
 Provides: the universal turbo PM scale + WHO colourbar; WindNinja wind-field
 sampling (regime-mean flow) for speed-scaled quiver overlays; accumulation
 diagnostics (ventilation index, flux convergence); a realistic 3D terrain inset;
-and a png(400dpi)+pdf saver. Importing applies the `pubfig` publication style.
+and a png(400dpi)+pdf saver. Importing applies the shared figure style.
 """
 from __future__ import annotations
 import sys
@@ -20,15 +19,15 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-from kandymodel.viz import style as pubfig  # applies publication style on import
+from kandymodel.viz import style as figstyle  # applies the shared style on import
 from kandymodel.transport import terrain as tt
 from config import KANDY_PINN_BBOX as BB
 
 DEC = REPO / "data" / "processed" / "decomp"
 STG = REPO / "data" / "processed" / "stage1_v3"
 PIN = REPO / "data" / "processed" / "pinn_inputs"
-PAPER_OUT = REPO / "results" / "figures" / "paper_figures"
-PAPER_OUT.mkdir(parents=True, exist_ok=True)
+FIG_OUT = REPO / "results" / "figures"
+FIG_OUT.mkdir(parents=True, exist_ok=True)
 
 # ── universal PM scale — YlOrRd, raised vmax + nonlinear (PowerNorm) ─────────
 # Locked 2026-06-06 (user): warm "emission-hotspot" map; one SHARED scale but the
@@ -38,7 +37,7 @@ PAPER_OUT.mkdir(parents=True, exist_ok=True)
 PM_CMAP = "YlOrRd"
 PM_VMIN, PM_VMAX, PM_GAMMA = 10.0, 40.0, 1.30
 TURBO = PM_CMAP   # back-compat: every PM heatmap reference now resolves to YlOrRd
-# A4 publication sizing: full text width ~178 mm = 7.0 in; figures kept <= ~8.7 in
+# A4 sizing: full text width ~178 mm = 7.0 in; figures kept <= ~8.7 in
 # tall so each fits on one A4 page with its caption.
 A4_W = 7.0
 A4_W_WIDE = 7.2
@@ -75,9 +74,9 @@ def square_heatmaps(fig):
 def save(fig, name, pdf=False, square=True):
     if square:
         square_heatmaps(fig)
-    fig.savefig(PAPER_OUT / f"{name}.png", dpi=400, bbox_inches="tight")
+    fig.savefig(FIG_OUT / f"{name}.png", dpi=400, bbox_inches="tight")
     if pdf:
-        fig.savefig(PAPER_OUT / f"{name}.pdf", bbox_inches="tight")
+        fig.savefig(FIG_OUT / f"{name}.pdf", bbox_inches="tight")
     plt.close(fig)
     print(f"  wrote {name}.png" + (" + .pdf" if pdf else ""))
 

@@ -1,5 +1,5 @@
 """
-figures_pub.py — publication-grade Kandy PM2.5 maps following satellite-AQ
+basemap.py — Kandy PM2.5 map rendering following satellite-AQ
 literature conventions (van Donkelaar/ACAG, China multi-decade PM2.5 studies):
 
   - smooth continuous rendering (1 km field, not blocky pixels)

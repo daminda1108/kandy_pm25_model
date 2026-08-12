@@ -38,7 +38,7 @@ sys.path.insert(0, str(REPO))
 from kandymodel.viz.basemap import _draw, _scale_bar, _north_arrow, LANDMARKS
 
 DEC = REPO / "data" / "processed" / "decomp"
-from kandymodel.viz.style import PUB_OUT as OUT  # publication style + folder
+from kandymodel.viz.style import FIG_OUT as OUT  # figure style + output folder
 OUT.mkdir(parents=True, exist_ok=True)
 
 # GEMM NCD+LRI (Burnett 2018)
