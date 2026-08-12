@@ -20,3 +20,46 @@ Thumbs.db
 # evidence bundle: pre-registrations, epistemic ledger, validation artifacts
 !evidence/
 !evidence/**
+
+# ── Reproducibility bundle (2026-08-11) ────────────────────────────────────
+# /data/ holds ~1 GB of regenerated OUTPUT and stays ignored. The small set of
+# DERIVED INPUTS the chain needs is tracked so a fresh clone can run
+# regenerate_all.py. Note the pattern order: un-ignoring a directory re-includes
+# everything inside it, so each directory is re-excluded with `dir/*` before the
+# specific files are whitelisted. Getting this wrong stages ~1 GB.
+# Third-party raw observations are deliberately absent — see data/README.md.
+!data/
+data/*
+!data/README.md
+
+!data/raw/
+data/raw/*
+!data/raw/geos_cf/
+data/raw/geos_cf/*
+!data/raw/geos_cf/kandy_geos_cf_*.csv
+
+!data/processed/
+data/processed/*
+
+!data/processed/decomp/
+data/processed/decomp/*
+!data/processed/decomp/S_emit_kandy.npz
+!data/processed/decomp/S_traffic_kandy.npz
+!data/processed/decomp/M_confinement_kandy.npz
+!data/processed/decomp/population_kandy.npz
+!data/processed/decomp/climatology.npz
+!data/processed/decomp/background_b_annual.csv
+!data/processed/decomp/B_background_hourly_????_v2.parquet
+
+!data/processed/pinn_inputs/
+data/processed/pinn_inputs/*
+!data/processed/pinn_inputs/kandy_windninja_library.npz
+!data/processed/pinn_inputs/kandy_terrain_tpi_svf_100m.npz
+!data/processed/pinn_inputs/kandy_elev_grid_100m.npz
+
+!data/processed/stage1_v3/
+data/processed/stage1_v3/*
+!data/processed/stage1_v3/vandonkelaar_kandy_annual.csv
+!data/processed/stage1_v3/T_anchor/
+data/processed/stage1_v3/T_anchor/*
+!data/processed/stage1_v3/T_anchor/T_kandy_hourly_????.parquet
