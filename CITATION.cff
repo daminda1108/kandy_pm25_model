@@ -1,14 +1,16 @@
 cff-version: 1.2.0
 message: "If you use this model or its outputs, please cite it as below."
-title: "Kandy PM2.5 — Additive Decomposition Model"
+title: "Kandy PM2.5 — a physically-structured decomposition model"
 abstract: >-
-  A physically-structured spatiotemporal PM2.5 model for the Kandy basin,
-  Sri Lanka, at 1 km hourly resolution (2019-2023). It separates the regional
-  and transboundary background from a terrain-shaped, locally-generated
-  increment, combining a gradient-boosted temporal anchor, satellite emission
-  patterns, a congestion-weighted traffic source, terrain confinement, and
-  WindNinja diagnostic winds, with calibrated uncertainty and a
-  population-exposure / health-burden layer.
+  Hourly PM2.5 at 1 km over the Kandy basin, Sri Lanka (2019-2026), for a city
+  with no public air-quality monitor. Concentration is decomposed into a regional
+  and transboundary background plus a terrain-shaped local increment, combining a
+  gradient-boosted temporal anchor with a road-network emission surface, terrain
+  confinement and mass-consistent diagnostic winds, with conformal uncertainty and
+  a population-exposure and health-burden layer. Because the target city cannot
+  validate the result, the identical model is run at ten monitored analogue cities
+  under the same two-sensor information budget and scored against withheld
+  stations. Pre-registrations and an epistemic ledger are included.
 type: software
 authors:
   - family-names: Alahakoon
@@ -17,8 +19,8 @@ authors:
 repository-code: "https://github.com/daminda1108/kandy_pm25_model"
 url: "https://github.com/daminda1108/kandy_pm25_model"
 license: MIT
-version: "1.0.0"
-date-released: "2026-06-07"
+version: "1.1.0"
+date-released: "2026-08-11"
 keywords:
   - PM2.5
   - air quality
@@ -28,3 +30,7 @@ keywords:
   - atmospheric science
   - remote sensing
   - uncertainty quantification
+  - conformal prediction
+  - transfer validation
+  - geospatial modelling
+  - reproducible research

@@ -1,137 +1,240 @@
-# Kandy PM2.5 — Additive Decomposition Model
+# Kandy PM2.5 — a physically-structured decomposition model
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ![Python](https://img.shields.io/badge/python-3.11-blue.svg)
 ![Status](https://img.shields.io/badge/status-research-orange.svg)
+![Reproducible](https://img.shields.io/badge/reproducible-inputs%20included-brightgreen.svg)
 
-A physically-structured spatiotemporal PM2.5 model for the Kandy basin, Sri Lanka,
-at 1 km hourly resolution for 2019–2023, with calibrated uncertainty and a
-population-exposure / health-burden layer.
+Hourly PM2.5 at 1 km over the Kandy basin, Sri Lanka, with calibrated uncertainty and a
+population-exposure and health-burden layer.
 
-This repository is the isolated, runnable production model. It contains only the
-additive-decomposition pipeline and its canonical figure suite — none of the
-exploratory PINN / cross-city ConvCNP / analogue-finder work that preceded it.
+**Kandy has no public air-quality monitor.** That is the problem this model exists to
+solve, and it shapes everything below: with nothing local to fit or to check against, the
+model is built from physically separable terms that depend only on globally available
+inputs, and is then validated by running it unchanged at ten cities that *do* have dense
+monitoring networks.
 
-## The model
+**[Explore the output →](https://daminda1108.github.io/kandy-pm25-explorer/)**
 
-```
-inc  = T(t) − B(t)
-PM(x, y, t) = B(t) + max( max(inc, 0), ε ) · P_local(x, y, t)
-                   + min(inc, 0)  −  max( 0, ε − max(inc, 0) )
-```
+---
 
-The two correction terms beyond the plain `B + inc·P_local` form are deliberate and
-each fixes a defect that ground truth exposed:
+## At a glance
 
-- the **increment split** (`max(inc,0)` / `min(inc,0)`) — when the hourly total dips
-  below the daily-resolution background (deep midday mixing, ~38 % of hours), the plain
-  form multiplies a core-high pattern by a *negative* increment and renders the city
-  core **cleaner** than the rural edge. The split lets the pattern structure only the
-  accumulation above background; ventilation below it is spatially uniform.
-- the **ventilated-hour floor ε** — the split alone renders those hours perfectly flat,
-  but Medellín's withheld network keeps real spatial spread on exactly those hours.
-  ε is mean-zero by construction, so the basin mean (the T-lock) is preserved
-  *exactly*, and ε ≥ 0 with an accumulation-side pattern means the core can never fall
-  below the edge. Validated at Medellín on stations never used to fit it
-  (flat-hour RMSE 8.53 → 8.00). Default `EPS_FLOOR = 2.573` (the shipped Kandy value,
-  a disclosed method transfer); set `KANDY_EPS_FLOOR=0` to reproduce the paper tier.
+| | |
+|---|---|
+| **Domain** | Kandy basin, Sri Lanka · 15 × 15 km · 1 km grid · hourly |
+| **Period** | 2019–2026, in three tiers of decreasing confidence |
+| **Validated** | 10 analogue cities, 5 countries, scored against withheld monitors |
+| **Seasonal cycle** | *r* = 0.94–1.00 across all ten cities |
+| **Diurnal cycle** | *r* = 0.60–0.98 in nine of ten |
+| **Level transfer** | −4% to +30% (median +7.6%) |
+| **Spatial rank** | significant against each city's own null in 6 of 9 estimable |
+| **Kandy 2023** | basin mean 21.0 µg/m³ · 427 attributable deaths/yr [235–625] |
 
-Both collapse to the plain form wherever the increment is healthy, so structured hours
-are unchanged.
+---
 
-- **B(t)** — regional and transboundary background (horizontally uniform per hour):
-  a rural Van Donkelaar floor scaled by the GEOS-CF daily seasonal shape. The local
-  fraction is ≈ 25 % (basin exposure ≈ 75 % regional / 25 % local), bracketed from
-  source-apportionment literature.
-- **T(t)** — the basin temporal anchor: a lag-free gradient-boosted series on
-  exogenous drivers, conformal-wrapped, re-anchored per year to the Van Donkelaar
-  area mean, then amplitude-sharpened. Be precise about what depends on local data
-  here: the annual **level** uses **no local measurement** (satellite only), whereas
-  the diurnal/seasonal **amplitude** is calibrated against two local research
-  low-cost sensors — the model trains on their record and its climatological swing is
-  matched to theirs, because a lag-free learner otherwise damps the daily cycle by
-  ~15 %. Those sensors are not a public, retrievable series, but they are local. The
-  evidence that the *method* recovers the shape without them is the transfer result
-  across the analogue-city panel, not this field.
-- **P_local** — a unit-mean spatial pattern (so the basin mean is preserved exactly):
-  the normalised product of emission structure (Van Donkelaar surface + a
-  congestion-weighted traffic source), boundary-layer-scaled terrain confinement, and
-  a transport overlay on WindNinja mass-consistent diagnostic winds.
+## Quickstart
 
-The transport overlay is a physically-motivated scenario; the fine-scale spatial
-*magnitude* is imposed from physics and not yet independently measured (no public
-monitoring network samples the valley-floor-to-ridge gradient). Temporal behaviour
-and basin level are corroborated by two independent satellite products.
-
-## Layout
-
-```
-kandymodel/                 the model package
-├── level.py                Van Donkelaar area-mean level anchor + S_emit grid
-├── background.py           B(t) regional/transboundary background
-├── anchor/                 T(t): predict_anchor, train_lgbm, (sharpen in scripts/)
-├── emission/               s_emit, traffic (congestion-weighted), timing e(t)
-├── confinement/            M(x,y,t) terrain confinement: build, calibrate
-├── transport/              terrain advection–dispersion + WindNinja winds
-├── assemble/               decomp_map, additive_field (headline)
-├── exposure.py · health.py population-weighting + GEMM burden
-├── validate/               validate, GHAP/NO2 cross-checks, Senarathna reference
-└── viz/                    style, basemap, helpers, paper_figures (F1–F13)
-scripts/                    regenerate_all, nowcast, sharpen_T_diurnal,
-                            build_overlay_predictions/spatial_uq/windninja_library/…
-data/  results/             intermediate artifacts + outputs (gitignored)
-config.py                   constants and paths
-```
-
-## Install
-
-Tested on Python 3.11. From the repository root:
+Tested on Python 3.11.
 
 ```bash
-python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
+git clone https://github.com/daminda1108/kandy_pm25_model.git
+cd kandy_pm25_model
+python -m venv .venv && source .venv/bin/activate    # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-The figure suite pulls OSM layers (roads / river / places) for the study-area
-basemap on first run and caches them under `data/processed/decomp/osm_kandy/`, so
-the first render needs network access; later runs work offline. Rendering the full
-F1–F13 suite takes a few minutes on a laptop CPU; a single nowcast is seconds.
-
-## Running it
-
-All commands are run from the repository root.
+A single hour, rendered in seconds:
 
 ```bash
-# render the publication figure suite (F1–F13) → results/figures/paper_figures/
-python kandymodel/viz/paper_figures.py --figs all
-
-# single-hour nowcast for any hour in the record
-python scripts/nowcast.py --ts "2022-12-07 08:00" --label "Dec 2022 episode"
-
-# rebuild the whole chain from the provided artifacts
-python scripts/regenerate_all.py              # from the provided T(t)
-python scripts/regenerate_all.py --from-anchor  # also re-derive T(t)
+python scripts/nowcast.py --ts "2022-12-07 08:00" --label "Dec 2022 haze episode"
 ```
 
-The shipped `data/` contains the intermediate artifacts the chain reads (the static
-S_emit / M / S_traffic / WindNinja grids, the T(t) parquets and inference grids, the
-lag-free boosters, the per-year field parquets, and the raw GEOS-CF daily CSVs). A
-full rebuild from raw satellite / reanalysis inputs is out of scope for this release.
+The whole field, rebuilt from the inputs in `data/`:
 
-## Provenance
+```bash
+python scripts/regenerate_all.py
+```
 
-Extracted from the research project `kandy_pm25` (D. Alahakoon, University of
-Peradeniya). The full development history, validation record, and the exploratory
-work that motivated this model live in the parent repository.
+The publication figure suite:
+
+```bash
+python kandymodel/viz/paper_figures.py --figs all
+```
+
+The first figure render fetches OpenStreetMap basemap layers and caches them, so it needs
+network access once. Everything else runs offline.
+
+---
+
+## The model
+
+Concentration is a regional background plus a locally-structured increment:
+
+```
+inc = T(t) − B(t)
+
+PM(x, y, t) = B(t) + max( max(inc, 0), ε ) · P_local(x, y, t)
+                   + min(inc, 0) − max( 0, ε − max(inc, 0) )
+```
+
+- **`T(t)`** — the basin temporal anchor. A lag-free gradient-boosted series on exogenous
+  drivers, conformal-wrapped, re-anchored each year to a satellite area mean.
+- **`B(t)`** — the regional and transboundary background, horizontally uniform per hour.
+- **`P_local`** — the spatial pattern, normalised to **unit spatial mean**: the product of a
+  road-network emission surface, terrain confinement, and transport along mass-consistent
+  diagnostic winds over the real topography.
+
+**The unit-mean normalisation is the load-bearing constraint.** It means the basin average
+returns `T(t)` exactly, so the level and the pattern are separately identifiable and can be
+validated independently. Everything the model claims rests on that separation.
+
+The two correction terms beyond the plain `B + inc·P_local` form each fix a defect that
+ground truth exposed. The **increment split** stops the model rendering the city core
+*cleaner* than the rural edge when the hourly total dips below the daily-resolution
+background. The **ventilated-hour floor `ε`** stops those hours rendering perfectly flat,
+which withheld stations at Medellín show they are not. Both are mean-zero or
+accumulation-side by construction, so the basin mean is preserved exactly and structured
+hours are unchanged.
+
+### The regional/local split
+
+About **48% of the annual mean is locally generated**, and that figure follows from a
+physical constraint rather than an assumption. Local sources emit continuously, so the
+local increment at an emitting location is strictly positive at every hour — rain changes
+removal, not emission — and the background therefore can never reach the total. Imposing
+that constraint yields *f* ≈ 0.48, and the result is insensitive to the one free parameter
+(a fourfold sweep moves it from 0.477 to 0.502). It agrees with three independent lines: a
+coherence floor of ≥0.41 derived from the anchor alone, a hierarchical fit with Kandy held
+out at 0.392, and a national-network instrument at 0.446.
+
+Because the field is anchor-locked, the level, exposure and burden are arithmetically
+unchanged by this. What changes is the attribution.
+
+---
+
+## Confidence tiers
+
+The three periods are **not** equally trustworthy, and the model labels them everywhere:
+
+| tier | period | basis |
+|---|---|---|
+| **Anchored** | 2019–2023 | Level pinned to the satellite product. The years the ten-city panel scored. |
+| **Extension** | 2024–2026 | The satellite anchor ends in 2023; level modelled from meteorology. Episode *frequency* is corrected and validated by holding out anchored years; episode *timing* is not. |
+| **Forecast** | rolling 5 days | A demonstration. No local verification is possible; intervals are deliberately widened. |
+
+---
+
+## Validation
+
+Kandy cannot check this model, so the model is checked elsewhere. Every term uses inputs
+available for any city, so the identical pipeline runs at ten cities with dense networks —
+**restricted to Kandy's two-sensor information budget** — and is scored against monitors it
+never saw.
+
+The most complete single test is Kathmandu: 39 held-out stations, seasonal and diurnal
+cycles both reproduced at *r* = 0.97, level within 1%.
+
+Full per-city results: [`evidence/results/validation_scorecard.csv`](evidence/results/validation_scorecard.csv).
+
+**What transfers:** temporal structure and the anchored level, across regimes.
+**What does not transfer uniformly:** fine within-city spatial rank, which is significant
+in six of nine estimable cities and absent in the rest.
+
+---
+
+## Evidence and pre-registration
+
+[`evidence/`](evidence/) holds the reasoning, not just the results:
+
+- **six pre-registrations** with gates, falsifiers and the expected outcome recorded
+  *before* each test ran;
+- a **43-entry epistemic ledger** tagging every quantity as **observed**, **learned** or
+  **imposed**, with the test that would falsify it;
+- the machine-readable artifacts behind each number.
+
+Not every pre-registered test passed, which is why they are all published. One produced a
+result that improved the headline number and was **not** adopted, because its validity gate
+could not be evaluated. Another plan was abandoned at a gate set in advance rather than
+moving the threshold.
+
+---
+
+## Data
+
+`data/` ships the ~8 MB of **derived inputs** the pipeline needs, so a fresh clone
+reproduces the field. Third-party raw observations are deliberately not redistributed.
+[`data/README.md`](data/README.md) states what is included, what is not, why, and how to
+obtain the rest. Upstream attributions are listed there and must travel with any reuse.
+
+---
+
+## Limitations
+
+Stated plainly, because they bound what the output can be used for.
+
+- **The fine within-city spatial pattern is imposed from physics, not measured.** No public
+  monitoring network anywhere samples the valley-floor-to-ridge gradient, and five
+  independent tests indicate the pattern cannot be learned from public covariates either.
+  The direction is defensible; the annual core-to-edge contrast (~1.2×) is the figure to
+  quote, not any single hour.
+- **The hourly regional/local split is not identifiable.** References built from real, dense
+  networks show the same pathology in 13–25% of hours. The split is reported annually.
+- **The shipped interval is correctly scaled but not centred for point comparison.** The
+  field is a 1 km area mean and any monitor is a point; expect an offset of +5 to +6 µg/m³
+  before drawing conclusions from a future measurement.
+- **The health estimate** propagates field uncertainty only, not structural uncertainty in
+  the concentration-response functions.
+
+The decisive missing input is a single monitor inside or upwind of the basin.
+
+---
+
+## Repository layout
+
+```
+kandymodel/            the model package
+├── level.py           satellite area-mean level anchor
+├── background.py      B(t) regional/transboundary background
+├── anchor/            T(t) temporal anchor: predict, train
+├── emission/          emission surface, traffic centrality, diurnal timing
+├── confinement/       M(x,y,t) terrain confinement
+├── transport/         terrain advection–dispersion, WindNinja winds
+├── assemble/          decomposition map, additive field (headline)
+├── exposure.py        population weighting
+├── health.py          GEMM attributable burden
+├── validate/          cross-checks against independent products
+└── viz/               figure suite (F1–F13), styling, basemap
+scripts/               regenerate_all, nowcast, and build steps
+data/                  derived inputs (tracked) · outputs (regenerated)
+evidence/              pre-registrations, epistemic ledger, result artifacts
+config.py              constants and paths
+```
+
+---
 
 ## Citation
 
-If you use this model or its outputs, please cite it (see `CITATION.cff`, or use
-GitHub's "Cite this repository" button):
+```bibtex
+@software{alahakoon2026kandy,
+  author  = {Alahakoon, Daminda},
+  title   = {Kandy PM2.5: a physically-structured decomposition model},
+  year    = {2026},
+  version = {1.0.0},
+  url     = {https://github.com/daminda1108/kandy_pm25_model}
+}
+```
 
-> Alahakoon, D. (2026). *Kandy PM2.5 — Additive Decomposition Model* (Version 1.0.0)
-> [Software]. https://github.com/daminda1108/kandy_pm25_model
+See [`CITATION.cff`](CITATION.cff), or GitHub's "Cite this repository" button. Please cite
+the upstream data sources listed in [`data/README.md`](data/README.md) as well.
 
-## License
+## Licence
 
-Released under the [MIT License](LICENSE).
+Code released under the [MIT License](LICENSE). MIT covers this project's own code and
+derived products; it does not re-license the upstream data, which carries the terms of each
+source.
+
+---
+
+*Undergraduate thesis, Department of Environmental Sciences, University of Peradeniya.
+Supervisors: Dr. U. Ranathunge, Dr. M. Dehideniya.*
