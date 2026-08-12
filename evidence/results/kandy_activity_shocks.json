@@ -1,0 +1,81 @@
+{
+ "level_ugm3": 13.912,
+ "shocks": [
+  {
+   "shock": "COVID lockdown",
+   "years": "[2020]",
+   "n_treat": 911,
+   "n_ctrl": 549,
+   "effect_ug": -8.037,
+   "effect_pct": -57.77,
+   "ci90_ug": [
+    -8.869,
+    -7.26
+   ],
+   "p": 0.0,
+   "assumed_activity_drop": [
+    0.6,
+    0.8
+   ],
+   "implied_f": [
+    0.722,
+    0.963
+   ]
+  },
+  {
+   "shock": "fuel crisis (peak)",
+   "years": "[2022]",
+   "n_treat": 294,
+   "n_ctrl": 2252,
+   "effect_ug": 2.501,
+   "effect_pct": 17.98,
+   "ci90_ug": [
+    1.262,
+    3.746
+   ],
+   "p": 0.001,
+   "assumed_activity_drop": [
+    0.25,
+    0.5
+   ],
+   "implied_f": [
+    0.36,
+    0.719
+   ]
+  },
+  {
+   "shock": "fuel crisis (full)",
+   "years": "[2021, 2022]",
+   "n_treat": 522,
+   "n_ctrl": 4565,
+   "effect_ug": 4.811,
+   "effect_pct": 34.58,
+   "ci90_ug": [
+    3.898,
+    5.761
+   ],
+   "p": 0.0,
+   "assumed_activity_drop": [
+    0.2,
+    0.4
+   ],
+   "implied_f": [
+    0.865,
+    1.729
+   ]
+  }
+ ],
+ "predictions": {
+  "S1": true,
+  "S2": false,
+  "S3": true,
+  "S4": false
+ },
+ "reference_effects": {
+  "sunday_pct": -7.77,
+  "fixed_holiday_pct": -15.63
+ },
+ "registered_caveat": "2020 lockdowns across India suppressed TRANSBOUNDARY transport as well, so the lockdown does not cleanly isolate local activity the way a Poya day does. Its implied f is an UPPER BOUND.",
+ "prior": "S1-S3 expected to hold; S4 least confident, lockdown f expected too high",
+ "verdict": "2/4 met. The shocks do NOT reproduce the holiday instrument's structure; the holiday-based line of evidence for f must be reported as weaker, not defended. Lockdown-implied f is an upper bound by the registered caveat."
+}

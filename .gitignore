@@ -16,3 +16,7 @@ venv/
 Thumbs.db
 .vscode/
 .idea/
+
+# evidence bundle: pre-registrations, epistemic ledger, validation artifacts
+!evidence/
+!evidence/**

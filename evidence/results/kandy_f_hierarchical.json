@@ -1,0 +1,36 @@
+{
+ "model": "f_c ~ N(mu,tau); SBI_c ~ N(rho*f_c, s_c); lit_c ~ N(f_c, w_c)",
+ "fitted_on": [
+  "xichang",
+  "kathmandu",
+  "medellin"
+ ],
+ "applied_to": "kandy",
+ "rho_attenuation": {
+  "mean": 0.426,
+  "sd": 0.0658
+ },
+ "population": {
+  "mu": 0.7228,
+  "tau": 0.2197
+ },
+ "kandy_f": {
+  "mean": 0.3921,
+  "median": 0.3886,
+  "ci90": [
+   0.2579,
+   0.525
+  ]
+ },
+ "shipped_prior": "0.20-0.28 by year (hand-set)",
+ "raw_sbi": 0.181,
+ "independent_checks_not_used_as_input": {
+  "coherence_floor": 0.41,
+  "nbro_wet_season": 0.446
+ },
+ "caveats": [
+  "Three fitting cities. This is the regime partial pooling exists for, but the population parameters are weakly identified and the interval should be read as indicative.",
+  "The literature bracket is treated as a soft observation with a normal likelihood; it is really an expert range, so its tails are optimistic.",
+  "rho is assumed common across cities. With three cities a regime-varying attenuation cannot be identified."
+ ]
+}

@@ -1,0 +1,67 @@
+{
+ "gates": {
+  "B1": true,
+  "B2": true,
+  "B3": false
+ },
+ "n_pass": 2,
+ "slope": 0.7199,
+ "slope_ci90": [
+  0.0703,
+  1.591
+ ],
+ "sign_agreement": "8/9",
+ "b3_recovered": [
+  "Bazhong"
+ ],
+ "per_city": {
+  "Xichang": {
+   "d_obs": 3.179,
+   "d_mod": 2.73,
+   "agree": true
+  },
+  "Chiang Mai": {
+   "d_obs": -0.17,
+   "d_mod": -0.076,
+   "agree": true
+  },
+  "Bazhong": {
+   "d_obs": 2.93,
+   "d_mod": 0.691,
+   "agree": true
+  },
+  "Kathmandu Valley": {
+   "d_obs": 1.213,
+   "d_mod": 4.541,
+   "agree": true
+  },
+  "Baoji": {
+   "d_obs": 6.504,
+   "d_mod": 5.987,
+   "agree": true
+  },
+  "Tai'an": {
+   "d_obs": 1.949,
+   "d_mod": 0.489,
+   "agree": true
+  },
+  "Yichang": {
+   "d_obs": 0.974,
+   "d_mod": -0.132,
+   "agree": false
+  },
+  "Medell\u00edn": {
+   "d_obs": 1.489,
+   "d_mod": 1.39,
+   "agree": true
+  },
+  "Bogot\u00e1": {
+   "d_obs": 7.203,
+   "d_mod": 2.781,
+   "agree": true
+  }
+ },
+ "note": "Contrasts are differences of per-hour network-mean-removed ANOMALIES, so they are centred near zero and their magnitudes are not comparable with the superseded paired-mean run. B1 and B2 are scale-free.",
+ "prior": "expected lower slope and sign agreement below 9/9",
+ "verdict": "Zone contrast PARTIALLY survives; report only the gates that passed and do not present it as a validated replacement for the station rank."
+}

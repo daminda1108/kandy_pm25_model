@@ -1,0 +1,32 @@
+{
+ "nominal": 0.9,
+ "pooled_coverage": 0.7239,
+ "n_hours": 19585,
+ "centring": {
+  "miss_below": 0.2571,
+  "miss_above": 0.0189,
+  "median_offset_ug": 5.859,
+  "coverage_offset_removed": 0.9216
+ },
+ "expected_point_comparison_offset_ug": [
+  5.0,
+  6.0
+ ],
+ "by_tier": {
+  "anchored": 0.7163,
+  "extension": 0.7691
+ },
+ "by_season": {
+  "DJF": 0.773,
+  "MAM": 0.8171,
+  "JJA": 0.6173,
+  "SON": 0.6539
+ },
+ "verdict": "CENTRING, NOT WIDTH. Coverage is 72.4% against a 90% nominal, but the failure is one-sided (25.7% below vs 1.9% above) with a median offset of +5.86 ug/m3, and removing each sensor's own offset restores 92.2% at the SAME width. This is the expected area-vs-point geometry (gotcha #51), not a calibration failure. Report the offset, and predict it: a naive comparison against a future point measurement will look like a large high bias and will not be one.",
+ "circularity_warning": "T(t) is trained on the FECT residual target AND amplitude-sharpened to the observed FECT climatology, so this is an IN-SAMPLE coverage estimate and an optimistic bound (gotcha #68). The out-of-regime figure measured on the sensorless anchor is 0.707, and the forecast tier widens by 1.35x on that basis; the historical field currently does not.",
+ "other_coverage_numbers": {
+  "stage_a_v3_LOMO_anchor": 0.865,
+  "sensorless_daily_anchor": 0.707,
+  "forecast_after_widening": 0.903
+ }
+}

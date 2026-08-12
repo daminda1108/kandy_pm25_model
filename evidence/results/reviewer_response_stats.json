@@ -1,0 +1,45 @@
+{
+ "embedding_power": [
+  {
+   "city": "Medellin",
+   "n": 17,
+   "partial_rho": 0.066,
+   "p": 0.8,
+   "min_detectable_r": 0.651
+  },
+  {
+   "city": "Kathmandu",
+   "n": 6,
+   "partial_rho": -0.143,
+   "p": 0.79,
+   "min_detectable_r": 0.963
+  },
+  {
+   "city": "Chiang Mai",
+   "n": 10,
+   "partial_rho": 0.176,
+   "p": 0.63,
+   "min_detectable_r": 0.816
+  }
+ ],
+ "embedding_power_verdict": "At these sample sizes the test could only have detected residual partial correlations of 0.65 to 0.96 at 80% power. The nulls therefore exclude only a LARGE independent embedding signal, not a modest one. The line should be reported as bounding the effect size, not as evidence of absence, and it cannot carry the weight of 'the most direct' of the five lines.",
+ "yichang_screen": {
+  "separating_descriptors": [
+   "topo"
+  ],
+  "n_separating": 1
+ },
+ "yichang_verdict": "1 descriptor(s) place Yichang outside the passing range: ['topo']. This is a candidate a priori screen, but with one failing city it is a hypothesis, not a validated rule.",
+ "level": {
+  "n": 10,
+  "median_signed": 7.64,
+  "median_abs": 7.64,
+  "iqr": [
+   2.46,
+   12.12
+  ],
+  "within_10pct": 7,
+  "min": -3.8,
+  "max": 29.54
+ }
+}

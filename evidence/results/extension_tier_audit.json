@@ -1,0 +1,99 @@
+{
+ "A_like_for_like": {
+  "common_window_months": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7
+  ],
+  "per_year_window_mean": {
+   "2019": 21.626,
+   "2020": 20.922,
+   "2021": 18.712,
+   "2022": 20.543,
+   "2023": 23.031,
+   "2024": 21.164,
+   "2025": 19.941,
+   "2026": 21.015
+  },
+  "partial_years": {
+   "2026": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ]
+  },
+  "misleading_headline_2026": false
+ },
+ "B_episodes": {
+  "locked": {
+   "p99": 55.23,
+   "max": 86.23,
+   "pct_gt35": 11.108
+  },
+  "extension": {
+   "p99": 55.45,
+   "max": 82.12,
+   "pct_gt35": 11.543
+  },
+  "tail_damped": false
+ },
+ "C_diurnal": {
+  "locked_swing": 13.096,
+  "ext_swing": 17.803,
+  "ratio": 1.359,
+  "damped": false
+ },
+ "D_background": {
+  "locked_acc_pct": 69.09,
+  "ext_acc_pct": 76.24,
+  "flag": false,
+  "per_year": {
+   "2019": {
+    "bt": 0.827,
+    "acc": 75.126
+   },
+   "2020": {
+    "bt": 0.912,
+    "acc": 70.742
+   },
+   "2021": {
+    "bt": 1.054,
+    "acc": 64.132
+   },
+   "2022": {
+    "bt": 0.949,
+    "acc": 61.553
+   },
+   "2023": {
+    "bt": 0.823,
+    "acc": 73.904
+   },
+   "2024": {
+    "bt": 0.824,
+    "acc": 72.279
+   },
+   "2025": {
+    "bt": 0.824,
+    "acc": 74.189
+   },
+   "2026": {
+    "bt": 0.756,
+    "acc": 82.238
+   }
+  }
+ },
+ "E_width": {
+  "locked": 29.42,
+  "extension": 44.1,
+  "narrower_on_less_certain_tier": false
+ },
+ "flags_raised": []
+}

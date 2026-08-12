@@ -1,0 +1,11 @@
+city,estimable,hours,reason,n_peri,n_core,separation,f_mean,f_p10,f_p90,month_min,month_max,hour_min,hour_max,hourly_ordered,pct_ordered,r_f_nstations,P1,P2,P3
+Xichang,False,0.0,too few hours,,,,,,,,,,,,,,,,
+Chiang Mai,True,549.0,,4.0,5.0,0.625,0.163,-0.035,0.435,0.033,0.337,,,0.78,0.832,0.309,True,False,True
+Bazhong,True,1381.0,,4.0,4.0,0.636,0.112,0.012,0.225,0.07,0.153,,,0.87,0.927,-0.036,True,False,True
+Chandigarh,False,,too few peripheral stations,1.0,,,,,,,,,,,,,,,
+Kathmandu Valley,True,104.0,,13.0,14.0,0.662,0.173,0.039,0.309,0.135,0.218,,,0.98,0.981,-0.28,True,True,True
+Baoji,True,1847.0,,6.0,6.0,0.667,0.21,0.068,0.358,0.163,0.279,,,0.95,0.992,0.008,True,True,True
+Tai'an,True,1426.0,,4.0,5.0,0.654,0.114,-0.003,0.248,0.081,0.191,,,0.86,0.893,0.024,True,False,True
+Yichang,True,1246.0,,4.0,5.0,0.625,0.069,-0.043,0.195,0.01,0.131,,,0.75,0.752,0.067,True,False,True
+Medellín,True,1553.0,,5.0,6.0,0.676,0.242,0.114,0.358,0.136,0.309,,,0.97,0.997,-0.001,True,True,True
+Bogotá,True,350.0,,6.0,7.0,0.658,0.349,0.185,0.517,0.283,0.462,,,0.99,1.0,0.087,True,True,True

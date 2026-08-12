@@ -1,0 +1,109 @@
+{
+ "gates": {
+  "D2_validity": true,
+  "D3_small_n": true
+ },
+ "D1_n_significant": 6,
+ "D4": {
+  "n_qualifying": 6,
+  "cities": [
+   "Xichang",
+   "Kathmandu Valley",
+   "Baoji",
+   "Tai'an",
+   "Medell\u00edn",
+   "Bogot\u00e1"
+  ],
+  "branch": "STANDS, restated: partial and regime-bounded on a corrected estimator"
+ },
+ "D5_analogues": {
+  "Chiang Mai": {
+   "E1": 0.218,
+   "p": 0.5124
+  },
+  "Kathmandu Valley": {
+   "E1": 0.435,
+   "p": 0.0066
+  }
+ },
+ "pooled": {
+  "E1_rho": 0.6208,
+  "E1_tau": 0.4802,
+  "E3_tau": 0.4817
+ },
+ "r_E1_vs_nstations": -0.1751,
+ "per_city": {
+  "Xichang": {
+   "E1": 0.783,
+   "p": 0.0162,
+   "null_p95": 0.583,
+   "E3": 0.733,
+   "n": 9
+  },
+  "Chiang Mai": {
+   "E1": 0.218,
+   "p": 0.5124,
+   "null_p95": 0.527,
+   "E3": 0.234,
+   "n": 11
+  },
+  "Bazhong": {
+   "E1": 0.543,
+   "p": 0.3084,
+   "null_p95": 0.771,
+   "E3": 0.167,
+   "n": 6
+  },
+  "Chandigarh": {
+   "E1": null,
+   "p": null,
+   "null_p95": null,
+   "E3": null,
+   "n": 0
+  },
+  "Kathmandu Valley": {
+   "E1": 0.435,
+   "p": 0.0066,
+   "null_p95": 0.267,
+   "E3": 0.295,
+   "n": 38
+  },
+  "Baoji": {
+   "E1": 0.826,
+   "p": 0.0002,
+   "null_p95": 0.432,
+   "E3": 0.673,
+   "n": 16
+  },
+  "Tai'an": {
+   "E1": 0.718,
+   "p": 0.0158,
+   "null_p95": 0.518,
+   "E3": 0.565,
+   "n": 11
+  },
+  "Yichang": {
+   "E1": 0.6,
+   "p": 0.0796,
+   "null_p95": 0.552,
+   "E3": 0.524,
+   "n": 10
+  },
+  "Medell\u00edn": {
+   "E1": 0.662,
+   "p": 0.0074,
+   "null_p95": 0.432,
+   "E3": 0.563,
+   "n": 16
+  },
+  "Bogot\u00e1": {
+   "E1": 0.801,
+   "p": 0.0,
+   "null_p95": 0.412,
+   "E3": 0.582,
+   "n": 17
+  }
+ },
+ "prior": "middle branch expected; Chiang Mai expected to FAIL significance. The previous round's prior was WRONG and is recorded as such.",
+ "verdict": "VALID (D2 passes). 6 of 9 cities are both significant and above 0.40. STANDS, restated: partial and regime-bounded on a corrected estimator."
+}

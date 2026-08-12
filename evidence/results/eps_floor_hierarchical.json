@@ -1,0 +1,74 @@
+{
+ "cities": [
+  {
+   "city": "medellin",
+   "eps0_abs": 5.65,
+   "mean_inc": 14.2,
+   "eps0_rel": 0.3979,
+   "rho": 0.311,
+   "n": 1751
+  },
+  {
+   "city": "kathmandu",
+   "eps0_abs": 0.93,
+   "mean_inc": 29.4,
+   "eps0_rel": 0.0316,
+   "rho": 0.03,
+   "n": 4429
+  },
+  {
+   "city": "chiangmai",
+   "eps0_abs": 16.68,
+   "mean_inc": 12.77,
+   "eps0_rel": 1.3062,
+   "rho": 0.21,
+   "n": 14016
+  }
+ ],
+ "absolute": {
+  "values": [
+   5.65,
+   0.93,
+   16.68
+  ],
+  "se": [
+   0.4129,
+   0.4657,
+   0.656
+  ],
+  "mu": 7.738,
+  "tau": 6.5683,
+  "se_mu": 3.8042,
+  "max_min_ratio": 17.9,
+  "tau_over_median_se": 14.1
+ },
+ "relative": {
+  "values": [
+   0.3979,
+   0.0316,
+   1.3062
+  ],
+  "se": [
+   0.0291,
+   0.0158,
+   0.0514
+  ],
+  "mu": 0.5767,
+  "tau": 0.5336,
+  "se_mu": 0.3087,
+  "max_min_ratio": 41.3,
+  "tau_over_median_se": 18.4
+ },
+ "kandy": {
+  "shipped_eps0": 2.573,
+  "mean_inc": 6.465,
+  "pooled_eps0": 3.728,
+  "predictive_90": [
+   0.0,
+   9.403
+  ],
+  "shipped_inside": true
+ },
+ "verdict": "eps0 is NOT a transferable constant in either form: between-city variation dominates within-city uncertainty, so a value fitted at one city predicts another city's only weakly. The RELATIVE normalisation the shipped model uses is NOT better behaved than the absolute one (41x vs 18x spread). The shipped Kandy value lies inside the pooled predictive interval, so it is not contradicted -- but it is one draw from a wide distribution rather than a determined quantity, and should be described that way.",
+ "note": "The floor's magnitude is weakly determined, but its SAFETY is not in question: the no-degrade gates pass at all three cities, the form is mean-zero so T-lock is exact, and eps0=0 recovers additive_v2 exactly. The consequence is a claim-tier statement, not a code change."
+}

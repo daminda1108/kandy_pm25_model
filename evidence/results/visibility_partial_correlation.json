@@ -1,0 +1,28 @@
+{
+ "n_days": 257,
+ "year": 2022,
+ "station": "VCBI",
+ "raw_r": -0.444,
+ "raw_p": 7.725144756549186e-14,
+ "control_rh": {
+  "r": -0.5153,
+  "p": 9.141202426437984e-19,
+  "dof": 254
+ },
+ "control_era5_rain": {
+  "r": -0.4564,
+  "p": 1.4204384594085359e-14,
+  "dof": 254
+ },
+ "control_rh_era5rain": {
+  "r": -0.508,
+  "p": 3.862670592064934e-18,
+  "dof": 253
+ },
+ "control_all": {
+  "r": -0.448,
+  "p": 6.817940233487864e-14,
+  "dof": 251
+ },
+ "verdict": "SURVIVES: the association is specific to the aerosol, not to shared weather. The corroboration stands and should be reported as a PARTIAL correlation, not the raw one."
+}

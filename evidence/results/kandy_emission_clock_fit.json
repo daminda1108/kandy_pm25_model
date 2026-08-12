@@ -1,0 +1,66 @@
+{
+ "n_treated_hours": 971,
+ "shipped": {
+  "morning_peak": 8,
+  "evening_peak": 17,
+  "eve_mor_ratio": 0.974
+ },
+ "measured": {
+  "morning_peak": 8,
+  "evening_peak": 18,
+  "eve_mor_ratio": 2.32,
+  "evening_peak_ci90": [
+   17.0,
+   21.0
+  ],
+  "eve_mor_ratio_ci90": [
+   1.168,
+   4.349
+  ]
+ },
+ "correction": {
+  "shift_h_raw": 2,
+  "shift_h_applied": 1,
+  "gain_raw": 2.193,
+  "gain_applied": 1.479,
+  "shrinkage_w": 0.402
+ },
+ "fitted": {
+  "morning_peak": 8,
+  "evening_peak": 18,
+  "eve_mor_ratio": 1.374
+ },
+ "e_fitted": [
+  0.3249,
+  0.2462,
+  0.2069,
+  0.2069,
+  0.2855,
+  0.5028,
+  0.8689,
+  1.4833,
+  1.5207,
+  1.2125,
+  1.0242,
+  0.9849,
+  0.9952,
+  0.9849,
+  0.2379,
+  1.4114,
+  1.5587,
+  1.7952,
+  2.0898,
+  1.9528,
+  1.6,
+  1.1309,
+  0.8092,
+  0.5662
+ ],
+ "status": "e(t) moves from an imposed literature prior to a prior with a LOCAL observational correction on the one feature the holiday instrument identifies: the evening lobe. Morning lobe, night floor and overall shape remain the EDGAR prior.",
+ "caveats": [
+  "~800 treated sensor-hours over 24 bins; the per-hour effect is noisy and is 3-point circularly smoothed before use.",
+  "The holiday effect is a LOWER bound on local emission at every hour: sources with no holiday cycle (cooking, waste burning, road dust) are invisible to it.",
+  "Two FECT sensors, both valley/suburban; the clock is assumed spatially uniform.",
+  "The correction is shrunk toward the prior in proportion to the width of the bootstrap interval, so a poorly identified ratio moves e(t) very little."
+ ]
+}
