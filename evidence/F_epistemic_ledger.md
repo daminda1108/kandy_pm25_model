@@ -4754,3 +4754,102 @@ should cite EGU26-9786 as the state of the art for a Sri Lankan field and distin
 the PM2.5–hospitalisation relationship** is independently interesting: it is consistent with the
 scavenging signal found here today (PM2.5 *rises* as it gets drier at both FECT sensors), from a
 different dataset and a different endpoint.
+
+## F.95 — 🟢 C1 RESOLVED: an honest satellite stream is worth as much as the fused one, and "geography beats satellite" survives (2026-09-01)
+
+**Registered at https://osf.io/bkpyr/ §1 before running.** Script
+`scripts/c1_satellite_stream_ladder.py`; product `data/processed/modular/c1_satellite_ladder.csv`.
+⚠ The first execution was **invalid and discarded** — the MAIAC stream had been pulled for
+2019–2022 against a frame that is 86% post-2023, so the rung was fitted on an all-NaN column
+(gotcha #85). Re-pulled 2019–2026; post-merge coverage median **49.5%**, and
+`require_stream_coverage` now asserts it before the fit.
+
+Three rungs, identical frame (47 stream-complete cities), learner, seed and LOCO folds:
+
+| rung | median RMSE | step from `Bud0b` |
+|---|---:|---:|
+| `Bud0b` drivers + geography | **19.35** | — |
+| `Bud0c-raw` + MAIAC AOD | **19.37** | **+5.97%** |
+| `Bud0c-fused` + GHAP level | **20.94** | **+5.37%** |
+
+**P1 HELD · P2 HELD · P3 REFUTED · P4 REFUTED · P5 HELD.**
+
+🟢 **P3's refutation is the finding, and it is good news.** I registered that the fused product
+would show a measurable **excess** over raw AOD — the signature of the extra drivers and the
+indirect monitor leakage it carries. **It does not. Raw MAIAC AOD is marginally BETTER
+(+5.97% vs +5.37%, an excess of −0.61 pp.)** So the value GHAP appeared to add at a monitored
+city is **not** recycled information showing up as skill; it is simply satellite information that
+raw AOD supplies just as well.
+
+**The consequence is that C1's methodological problem has a free fix.** The circularity objection
+was real — GHAP trains on this panel's own OpenAQ and CNEMC monitors — but it costs nothing to
+avoid. **Switch `SATELLITE_LEVEL` to raw MAIAC AOD**: admissible, no leakage, no shared drivers,
+and it performs at least as well. The paper can state its satellite stream is an actual
+radiometric observation without giving anything up.
+
+🟢 **P5 HELD — the headline survives an honest stream.** Static geography (10.8%) still beats the
+satellite level (5.97%). That claim was in doubt precisely because the 7.6% was a mixture; it is
+now measured against a clean stream and stands.
+
+⚠ **P4 refuted, exactly as flagged in advance.** No association between the fused excess and
+station count (rho = −0.089, p = 0.551, n = 47). Per the registration this means the leakage is
+reported as **an argued methodological risk, not a measured effect** — and P3 now shows it does
+not manifest as skill either way.
+
+⚠ **Two metrics disagree in direction and both are reported (gotcha #74).** `Bud0c-fused` has a
+**higher median RMSE** (20.94 vs 19.35) while showing a **positive median per-city gain**
+(+5.37%). Most cities improve slightly, but the fused stream evidently hurts some badly enough to
+move the median value. That is a further mark against GHAP and should be looked at before it is
+ever reinstated.
+
+⚠ **11 of 47 cities carry AOD on fewer than 30% of days** — genuine cloud, not a broken merge.
+That an honest satellite stream is *unavailable half the time in the tropics* is a real limit on
+sensorless methods, and it rhymes with F.53: the regime that most needs them is the regime where
+the inputs are thinnest.
+
+## F.96 — 🔴🟢 F.92 RE-DERIVED ON THE HONEST STREAM: the inversion is not just confirmed, it DOUBLES — and the leakage was hiding somewhere else entirely (2026-09-01)
+
+Script `scripts/ladder_maiac.py`; products `ladder_maiac.csv`, `ladder_maiac_comparison.csv`.
+`ladder_revalidated.csv` is **not** overwritten — it is what F.85 and OSF `g6hqb` rest on, and
+the C1 registration called for the ladder to be reported both ways.
+
+F.95 fixed the bottom rung; every rung **above** it was still computed on GHAP, so F.92's
+acquisition recommendation was still resting on a monitor-trained stream. Re-run end to end with
+raw MAIAC AOD, identical learner, seed and folds:
+
+| stream | n | +2 stations | +6 more | +background |
+|---|---:|---:|---:|---:|
+| GHAP (fused) | 48 | 17.8% | 0.1% | **40.6%** |
+| **MAIAC (raw)** | 47 | **23.6%** | 0.1% | 37.1% |
+
+**Deep tropics — Kandy's own band:**
+
+| stream | n | +2 stations | +background | verdict |
+|---|---:|---:|---:|---|
+| GHAP (fused) | 13 | 21.9% | 8.5% | local wins 2.6× |
+| **MAIAC (raw)** | 13 | **43.7%** | **10.3%** | **local wins 4.2×** |
+
+🟢 **F.92's inversion survives and roughly doubles.** On an honest satellite stream the first two
+local stations buy **43.7%** in Kandy's band against **10.3%** for a regional background. The
+provisional caveat is discharged: **CEA outranks NBRO for Kandy, and by more than we thought.**
+
+🔴 **AND THIS IS WHERE THE LEAKAGE WAS.** C1's P4 looked for GHAP's contamination as an *excess
+in the satellite's own skill* and found none (rho = −0.089, p = 0.551), so F.95 reported the
+leakage as an argued risk rather than a measured effect. **P4 was looking in the wrong place.**
+The contamination does not inflate the satellite rung — it **deflates the rung above it**.
+A monitor-trained product at a monitored city already encodes part of what that city's own
+monitor would tell you, so adding the monitor appears to buy less: **17.8% against 23.6% pooled,
+and 21.9% against 43.7% in the deep tropics.** GHAP was suppressing the measured value of a
+local station by roughly **half** in the band that matters most.
+
+**The general lesson, which is the publishable one.** A fused product used as a covariate does
+not flatter itself — it flatters the *baseline*, and so **understates the value of the
+observations it was trained on**. Any value-of-information study that prices monitors against a
+monitor-trained product will under-price them. That is a methodological result about a practice
+the whole field engages in, and it was invisible until the ladder was re-run on a stream with
+clean provenance.
+
+⚠ n = 47 rather than 48 (one city lacks usable AOD); the two ladders are otherwise identical in
+learner, seed, folds and frame construction. ⚠ MAIAC is daily where GHAP was an annual scalar, so
+provenance and temporal resolution both differ — the comparison is "honest stream vs fused
+stream" as registered, not a controlled test of provenance alone.
