@@ -149,10 +149,14 @@ in six of nine estimable cities and absent in the rest.
 
 [`evidence/`](evidence/) holds the reasoning, not just the results:
 
-- **six pre-registrations** with gates, falsifiers and the expected outcome recorded
-  *before* each test ran;
-- a **43-entry epistemic ledger** tagging every quantity as **observed**, **learned** or
-  **imposed**, with the test that would falsify it;
+- **25 pre-registration documents** (registrations and amendments) with gates, falsifiers and
+  the expected outcome recorded *before* each test ran, including the registered cross-city
+  confirmation and robustness tests of the information-budget ladder (OSF `ueyfr`, `b379r`,
+  `jea58`, `mhgna`) and the spatial learning curve (`rqn4y` and amendments, `fu59b`);
+- a **125-entry epistemic ledger** (through F.123, synced 2026-10-06) tagging every quantity as
+  **observed**, **learned** or **imposed**, with the test that would falsify it. Later entries
+  correct earlier ones in place: for example, the single-split deep-tropical result of F.92/F.96
+  is retracted by F.115–F.117, where the effect is re-estimated over 21 station splits;
 - the machine-readable artifacts behind each number.
 
 Not every pre-registered test passed, which is why they are all published. One produced a

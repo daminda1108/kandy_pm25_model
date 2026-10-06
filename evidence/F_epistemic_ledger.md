@@ -354,7 +354,7 @@ the NBRO regional floor.
 
 | Diagnostic | Result |
 |---|---|
-| fitted $\alpha$ | **0.80 — bound-saturated** (cf. SharedTerrainAnsatz, all 6 params bound-hit) |
+| fitted $\alpha$ | **0.80 — bound-saturated** (cf. SharedTerrainAnsatz, **2 of 6** params bound-hit — ⚠ corrected 2026-09-04; this line read "all 6" and the recomputation in `paper2026_fig3_information_bound.py` reports 2 of 6, namely `H_trap_m` and `alpha_valley`) |
 | coherence | B > T 28.5% → **21.8%**, still FAIL |
 | W2 JJA/DJF | **0.427** vs observed 0.53, FAIL |
 | agreement with NBRO floor | **r = −0.07**, against **+0.37 for the v2 daily background it replaced** |
@@ -2314,6 +2314,47 @@ identical chain.
 **For Kandy this is the strongest argument yet for NBRO**: a regional network ~90 km out
 recovers most of the single largest skill gain available to the model, and Kandy currently has
 none.
+
+### 🔄 RE-RUN 2026-09-05 on the CORRECTED (`Bud0c`) bottom rung
+
+`scripts/independent_background_revalidated.py` -> `data/processed/modular/independent_background_revalidated.csv`.
+
+The original ran on the **pre-F.84** ladder. Both of its arms shared that defect so the recovery
+FRACTION was largely protected, but its absolute gains sat against an artificially weak baseline
+and could not be quoted beside `ladder_revalidated.csv`. Re-run with the same `Bud0c` rung and
+the same seed (20260823):
+
+| | recorded (pre-F.84) | re-run (`Bud0c`) |
+|---|---:|---:|
+| recovery, **median of per-city ratios** | 79% | **73%** |
+| recovery, ratio of medians | 75% | 78% |
+| pairs scored / no donor | 20 / 26 | **20 / 27** |
+| median donor distance | 89 km | 89 km |
+
+🔴 **The published statistic moved 79 -> 73.** A stronger sensorless rung leaves less headroom
+for any background to recover and the independent arm loses more of it than the own-network arm,
+so the ratio was **partially** protected, not fully. **The conclusion is unchanged and the margin
+is smaller.** Only the per-city-ratio statistic is published, matching every other ladder gain;
+publishing both would put two numbers for one quantity in one document (gotcha #87).
+
+🟢 **The distance dependence is now quantified and it is the reason the residual cannot be
+attributed.** Recovery is **84%** in the nearer half (median 62 km) and **57%** in the farther
+half (median 152 km). The own-network ring sits 5-15 km out, so independence is confounded with
+proximity throughout. **This test bounds the same-network artefact from ABOVE at roughly a
+quarter; it does not measure it.**
+
+⚠ **Kandy's own band is the weakest cell**: deep-tropical recovery is **37%** at a median donor
+distance of **221 km**, on n=4. The independent evidence for the background rung is thinnest
+exactly where the demonstration city sits. This does not overturn F.92/F.96 (local stations
+outrank the background at Kandy) -- it points the same way.
+
+Claims: `donor.gain_reproduced_pct` `donor.reproduced_{near,far,deep_tropical}`
+`donor.km_{near,far,deep_tropical}` `donor.pairs` `donor.no_donor` `donor.median_km`.
+The `donor()` group in `build_claims.py` now reads the re-run, not the superseded file.
+
+**Why it was re-run:** an external reviewer identified this rung as the thesis's most vulnerable
+claim. The check was made in the place where the result was most wanted to hold and came back
+smaller, which is now Appendix D's clearest example of the pattern.
 
 
 ## F.55 — the diurnal cycle transfers in the DEEP TROPICS and nowhere else
@@ -4853,3 +4894,1508 @@ clean provenance.
 learner, seed, folds and frame construction. ⚠ MAIAC is daily where GHAP was an annual scalar, so
 provenance and temporal resolution both differ — the comparison is "honest stream vs fused
 stream" as registered, not a controlled test of provenance alone.
+
+
+## F.97 — the ladder is PATH-DEPENDENT, and the tropical inversion survives an interval only on the clean stream
+
+`scripts/ladder_order_and_bootstrap.py` → `ladder_order_variants.csv` · `ladder_bootstrap.csv` ·
+`ladder_order_summary.json`. Both tests were prompted by an external methodological review, and
+neither needed new data.
+
+### (a) Does the ladder measure the information, or the ORDER it was added in?
+
+Every gain is a marginal at a POSITION, so the estimand is a path-dependent marginal. One
+reordering is **impossible by construction and that is itself the finding**: the background
+enters as a second regressor whose coefficient is fitted against LOCAL station data, so a
+"background before any local station" rung has no target and cannot be built. **A background is
+only ever priceable given some local observation.** The ladder's order is partly forced.
+
+Permuting where the background sits relative to stations 3–8, over **46 cities**, both routes
+ending at the same information set:
+
+| quantity | production order | background one step earlier |
+|---|---:|---:|
+| what a background buys | **40.56%** | **38.03%** |
+| what stations 3–8 buy | **0.13%** | **2.81%** |
+
+🟢 **The background result is ORDER-ROBUST** — largest step in either position, moving by ~2 pp.
+
+⚠ **The redundancy result is order-robust in CONCLUSION, not in MAGNITUDE.** Stations 3–8 buy
+**21× more** with a background present (2.81 vs 0.13) and are still small. Part of that is not
+local information: with 6 stations the fitted background COEFFICIENT is sharper, so some apparent
+gain is a better-estimated background. **Never quote 0.1% as a fixed quantity.**
+
+🔴 **The two orders reach the same information and NOT the same skill** — median final RMSE
+differs by **0.106 µg/m³**. The shrinkage estimator accumulates differently along different
+paths. Path dependence is a property of the measurement, not only of the presentation.
+
+⚠ Also note what the shrinkage does epistemically: because a tier retreats toward the tier below
+when a stream does not help, **the ladder cannot discover that a stream is HARMFUL**, only that
+it is not usable. A ~0 rung means *no attainable improvement*, not *no information present*.
+
+### (b) Uncertainty over CITIES, not city-days
+
+28,930 city-days is not n=28,930; days within a city are strongly correlated. Bootstrapping
+**cities** with replacement, 2000 resamples:
+
+| step | median | 95% over cities |
+|---|---:|---|
+| first two sensors | 17.85% | **[4.6, 23.5]** |
+| stations 3–8 | 0.10% | **[0.0, 0.9]** |
+| a background series | 40.56% | **[26.7, 45.2]** |
+
+🟢 **The tightest result is the NULL.** Stations 3–8 are bounded above at 0.9%. The two positive
+effects are pinned down to no better than roughly a factor of two.
+
+### (c) 🔴 THE DEEP-TROPICAL INVERSION DOES NOT SURVIVE ON THE FUSED STREAM
+
+Paired within city (the two gains are measured on the SAME city), bootstrapped over cities, n=13:
+
+| satellite stream | paired advantage of 2 sensors over background | favours sensors | excludes 0 |
+|---|---:|---:|---|
+| **GHAP (fused)** | **+3.6 pp [−14.3, +36.3]** | 54% | **NO** |
+| **MAIAC (raw)** | **+33.3 pp [+7.0, +50.1]** | 77% | **YES** |
+
+🔴 **F.92's inversion, measured on GHAP, is a coin flip at 54% of cities and its interval spans
+zero.** Stated as a procurement recommendation it was not supportable. **F.96's, on the honest
+MAIAC stream, is.** Same 13 cities, same procedure, differing only in the satellite stream.
+
+🟢 **This is the sharpest consequence of C1/F.95 anywhere in the programme.** The contaminated
+covariate did not merely shift the numbers — **it destroyed the significance of the finding that
+matters most for Kandy.** A monitor-trained product understates what a monitor is worth, and in
+the deep tropics it understated it enough to hide the inversion entirely.
+
+⚠ The pairing test was **not pre-registered**; report as post-hoc. ⚠ n=13 and the upper end runs
+to +50 pp. **Quote F.96/MAIAC for the recommendation, never F.92/GHAP alone.**
+
+Claims: `order.*` `inv.{ghap,maiac}.*` `boot.{ghap,maiac}.{pooled,deep_tropical}.*`.
+
+
+## F.98 — chemistry, deepened: one usable result, one registered null, one invalid test
+
+Three strands run 2026-09-05 after an external reviewer characterised chemistry as a *supporting*
+discipline rather than a core one. Scripts `chemistry_mechanism.py` · `species_partition_kandy.py`.
+**Two of the three returned nothing usable, and the reasons differ instructively.**
+
+### (a) 🔴 REGISTERED NULL — does composition explain what latitude band only LABELS?
+
+Pre-registered at `docs/prereg_chemistry_mechanism_2026-09-05.md`, **lodged and pushed before the
+analysis was written** (commit `20c4d57`). The `sec_frac` direction was one-sided because it was
+committed in `pull_panel_speciation.py` on **2026-09-01** (`b9fd181`), four days before any
+correlation was computed. The `oc_bc` test was promoted after an exploratory probe and is
+therefore two-sided, corrected separately, and **may never be called pre-registered**.
+
+**All 3 confirmatory hypotheses: UNDETECTABLE at this power.** Largest partial rho **0.135**
+against a detection limit of **0.431**. Not a near miss — an order of magnitude short.
+
+🔴 **AND THE DEVIATION IS THE FINDING.** The registration expected n=46; the analysis scored
+**n=35**, because controlling for band **drops the 11 CNEMC cities, which carry no band**.
+Decomposing the exploratory signal that motivated the study:
+
+| group | n | rho(OC/BC, local-over-background advantage) | p |
+|---|---:|---:|---:|
+| pooled | 46 | **+0.388** | 0.0078 |
+| banded only | 35 | **+0.093** | 0.595 |
+| CNEMC only | 11 | **+0.036** | 0.916 |
+
+**A correlation significant at p=0.008 survives in NEITHER group on its own.** CNEMC sits at low
+OC/BC (5.69) and low advantage (−39.0); the banded cities at high (9.41) and high (+7.0). The
+"chemical relationship" is the line joining two clusters that differ in network, instrument class
+and country. **The F.52 class×band confound reappearing wearing a chemical variable's name.**
+Caught only because the registered design controlled for band instead of pooling.
+
+### (b) ⚠ INVALID TEST — is the split chemically coherent species by species?
+
+Prediction stated in the script docstring and **committed before running** (`9df352f`), the same
+device that made (a)'s direction citable: black carbon has no secondary source and is the purest
+local tracer; sulphate forms over hours to days and is the purest aged-regional tracer; so
+`f(BC) > f(sulphate)` under one common estimator.
+
+**Result: 0.387 vs 0.444, gap −0.057, rank agreement rho = −0.500.** The order is *reversed*.
+
+🔴 **NOT REPORTED AS A REFUTATION, because the negative controls fail.** Kandy is an inland
+valley with **no local sea-salt source at all** and no dust source of consequence, so both have a
+true local fraction near zero. The estimator returns **dust 0.806** and **sea salt 0.645** — the
+two HIGHEST values of any species. An estimator ranking material with no local source above the
+purest local tracer is measuring **episodic temporal variability**, not origin: dust and sea salt
+arrive in transport events and are the most episodic species present.
+
+**The species prediction is NEITHER held NOR refuted. It is untested.** Reporting the reversal as
+a chemical refutation would report an instrument failure as a finding. ⚠ The controls were read
+**after** the run, not declared before it; that is a design weakness, not a defence. Their
+expected value follows from geography rather than from the result, which is the only reason this
+is a control argument and not special pleading.
+
+**What would make it answerable:** measured speciation at sub-daily resolution. The model's `B`
+is flat *within a day*, and a floor-based estimator needs exactly that structure to mean anything.
+Daily modelled composition cannot supply it.
+
+### (c) 🟢 THE ONE THAT WORKS — bounding what an intervention could remove
+
+The thesis **withdrew** "removing every local source removes half the problem" (no chemistry, so
+local increment ≠ locally emitted primary material). Withdrawal leaves a policy reader with
+nothing. Fréchet bounds replace it, with no assumption beyond `f` and the secondary share `S`:
+
+```
+L <= min(f, 1-S)      L >= max(0, f-S)      f = 0.4828,  S = 0.392 (GEOS-CF)
+```
+
+🟢 **The locally emitted primary share at Kandy is between 9.1% and 48.3% of concentration.**
+The lower bound responds **immediately** to local emission control. The upper bound equals the
+whole local increment and requires every locally formed secondary particle to vanish too — **so
+the withdrawn claim sat at the TOP of a range, not in the middle of one.** The width is set
+entirely by not knowing how much of the increment is secondary, which makes a speciated Kandy
+measurement the item that would narrow it.
+
+⚠ GEOS-CF is a **model at ~25 km**. `S` is a modelled share and must never be presented as
+measured speciation.
+
+### Standing consequence
+
+**Chemistry remains a SUPPORTING discipline and the thesis says so.** These three strands add one
+usable bound, one bounded null and one honest non-result. They do not add a chemical mechanism,
+and `§6.7`'s statement that the model contains no chemistry is unchanged. ⚠ **Do not bolt on a
+CTM** — it would be unvalidatable at Kandy for exactly the reasons Chapter 1 gives.
+
+Claims: `chem.mech.*` `chem.cluster.*` `chem.species.*` `chem.secondary_share`
+`chem.intervention_{lo,hi}`.
+
+
+## F.99 — a sensor network for Kandy, designed as an experiment, and the criterion that would have rejected it
+
+`scripts/{design_sensor_network,design_comparison,pull_kandy_receptors,plot_sensor_design,plot_design_justification}.py`.
+Plan `docs/sensor_placement_plan_2026-09-05.md`; thesis §9.7.
+
+### 🔴 THE NUMBER THE DESIGN TURNS ON
+
+The fine emission surface spans **65x** from p10 to p90 at 94 m across the 15x15 km domain.
+**The existing in-domain records sit between the 61st and 100th percentile.** The entire lower
+**61%** is unsampled, and one of the two FECT sensors is **outside the domain altogether**.
+**A network cannot recover a gradient it never straddles** — the most likely reason six searches
+for spatial structure found none.
+
+### The design: 35 sites, 5 strata, stratified on PHYSICS as well as emissions
+
+| stratum | n | answers |
+|---|---:|---|
+| **A** anchor | 1 | the level discrepancy; calibrates every other unit |
+| **B** design | 12 | cLHS over **7 covariates**: emission, population, height above valley floor, `delta_z`, nocturnal ventilation, nocturnal convergence, day/night ventilation ratio |
+| **C** paired | 9 | 3 triplets at 0/100/300 m **along the gradient**, all inside one cell |
+| **E** vertical | 5 | **8 to 291 m above the local valley floor** |
+| **D** receptor | 8 | named schools/clinics, **held out of all fitting** |
+
+🟢 **The vertical stratum exists because of this project's own null.** The dynamic-transport
+diagnostic was diagnosed as a DATA problem: monitored stations worldwide sit on the valley floor
+and never straddle the floor-to-ridge gradient. Kandy has 846 m of relief. This is the axis no
+network on Earth samples.
+
+⚠ **SVF measured and DROPPED.** CV **0.023**, IQR **0.021** on a 0-1 scale — very nearly a
+constant, because the ridges sit 5-10 km out. Independently reproduces gotcha #21. A near-constant
+covariate in cLHS consumes an optimiser dimension and dilutes the rest. Dropping it moved design
+coverage from the 33rd-97th percentile to the **12th-98th**.
+
+⚠ **Nocturnal convergence smoothed at source.** The wind library is 64x64 (~230 m); a finite
+difference on it is dominated by numerical noise, and regridding that to 94 m would have cLHS
+chasing artefacts of the differencing scheme while advertising resolution the flow field lacks.
+
+🟢 **Logistics is a CONSTRAINT, never an objective.** Only **19,467 of 25,600 cells (76%)** lie
+within 400 m of a road and are serviceable; the rest are removed **before** optimisation.
+**Making access an objective is precisely how convenience sampling happens.**
+
+### 🔴 THE FINDING: the textbook criterion endorses the convenience sample
+
+Five designs, same grid, same 7 covariates, same metrics:
+
+| design | rel D-efficiency | gradient covered | KS from domain (lower better) |
+|---|---:|---:|---:|
+| D-optimal | 1.00 | 90 | 0.344 |
+| **existing network** | **0.88** | 37 | 0.556 |
+| **road-sited (the convention)** | **0.70** | **1** | 0.509 |
+| hybrid | 0.48 | 78 | 0.205 |
+| random | 0.42 | — | 0.238 |
+| **proposed (cLHS)** | **0.35** | **94** | **0.127** |
+| population-weighted | 0.31 | 52 | 0.396 |
+
+🔴 **D-efficiency ranks the two designs ALREADY KNOWN TO PRODUCE NULLS above the one built to
+break them.** Road-siting earns 0.70 while sampling **ONE percentile** of the emission gradient,
+because D-efficiency rewards spread on the remaining covariates and is **indifferent to collapse
+on the one that matters**. D-optimal also stacks two sensors **211 m apart**.
+
+⚠ **The cost is real and stated:** the proposed design gives up **65%** of D-efficiency and sits
+**below a random draw** on that measure. The defence is not that the criterion is wrong in
+general — it is that D-efficiency is defined relative to an ASSUMED model, this project's six
+nulls are the record of that assumption failing, and the campaign exists to test whether better
+sampling rescues it. **Buying coefficient precision for a model that does not work is buying the
+wrong thing.**
+
+🟢 **n = 12 is set by SATURATION, not budget.** Beyond 12 design sites a further site improves
+representativeness by <0.01, averaged over **5 seeds**. ⚠ A single seed produced a D-efficiency
+curve reading 0.46, 0.34, 0.68, 0.78, 0.65 with n — pure sampling noise that invents a knee.
+
+### 🟢 Susceptible groups sit where the model is weakest
+
+**150 receptors mapped** (OSM, a LOWER BOUND — a missing school is invisible). **78 (52%) sit
+above the 90th percentile** of the emission proxy; the **median school is at the 90.8th**.
+⚠ A statement about a PROXY, which is the argument for measuring rather than asserting it.
+⚠ Two bases published and named: `net.receptors_mapped` (150) vs `net.receptors_distinct` (111,
+after collapsing institutions within 150 m). They differ and both appear, so neither is a
+surprise.
+
+### What it CANNOT do, stated in the plan
+
+Cannot narrow the **9.1-48.3%** intervention bound (needs filter sampling). **Under-samples
+residential biomass burning** — 14.1% of mass vs traffic's 7.6% — because it stratifies on a
+road-centrality surface. **Outdoor workers are not in it at all**: no fixed location, so they
+need personal or mobile sampling.
+
+### 🔴 The premise is FALSIFIABLE and that is the point
+
+If a deliberately contrasted network still yields rank correlation near the **0.309** a single
+free raster achieves, the information-limited reading is confirmed **far more strongly than six
+convenience-sample nulls could confirm it**. **Register that outcome as a success before
+deployment**, so it cannot afterwards be called a failed campaign. If it rises materially, the
+ceiling was a sampling artefact and the spatial chapters are a statement about network design.
+**A design that can only succeed is not an experiment.**
+
+### Defects caught while building
+1. Both members of each pair initially carried the **SAME coordinate** — the artefact the
+   Elangasinghe re-analysis already had to withdraw once (F.69). Offsets now real and asserted.
+2. Two receptors **30 m apart** counted as two sites. Thinned at 150 m.
+3. `plot_design_justification.py` carried a **hardcoded 0.92** that went stale when the covariate
+   set changed; the real value is 0.70. Now read from the comparison file. **The figure was
+   asserting a number the data contradicted** — the exact defect gotcha #86 describes.
+
+Claims: `net.*` (39). Figures: `sensor_design_kandy.png`, `sensor_design_justification.png`.
+
+
+## F.100 — 🔴 the campaign cannot answer its own headline question, and the power calculation said so BEFORE deployment
+
+`scripts/campaign_power.py` → `campaign_power.json`. Registered at
+`docs/prereg_kandy_campaign_2026-09-05.md`. **Genuinely blind**: no instrument bought, no site
+visited, no observation exists. Unlike the two registrations lodged earlier the same day, there
+was nothing to have peeked at.
+
+### 🔴 THE FINDING
+
+The campaign was conceived to settle **"is the spatial ceiling a sampling artefact?"** Six nulls,
+every network a convenience sample, a deliberately contrasted network to break the tie.
+
+With **18 sites available to fit a spatial pattern** (anchor + design + vertical; the paired
+offsets are within-cell replicates, the receptor stratum is held out), beating the benchmark
+**rho = 0.309** requires reaching **0.61 to 0.78** depending on how far the campaign pattern
+departs from the benchmark predictor. That is a required gain of **+0.30 to +0.47**.
+
+**The 46-city panel resolved 0.130.**
+
+| target | r_pp 0.50 | r_pp 0.70 | r_pp 0.85 |
+|---|---:|---:|---:|
+| sites needed to reach a 0.130 gain | **304** | **187** | **96** |
+
+**Matching the panel in ONE city needs 96 to 304 fitting sites**, against the 18 proposed and the
+12 at which the design's representativeness saturates. Those are different criteria answering
+different questions; the design satisfies the second and not the first.
+
+🔴 **H1 DEMOTED TO EXPLORATORY BEFORE DEPLOYMENT.** The campaign must not be proposed, funded or
+written up as resolving the spatial question. Doing so would repeat, with instruments and money,
+the exact error Chapter 5 documents: an experiment that cannot see the effect it seeks, reporting
+its silence as evidence.
+
+### 🟢 What the campaign IS well powered for — the new confirmatory set
+
+| test | power | limit |
+|---|---|---|
+| **C1 within-cell ratio** | 🟢 **decisive in weeks** | resolves a ratio to **1.044** after 7 days, **1.021** after 30. Competing predictions: model **1.58** vs the one Kandy observation **27.5**. Separated by an order of magnitude. Power comes from HOURS averaged, not sites. |
+| **C2 drainage sink** | 🟢 well powered | sign test, unit = **NIGHT** not site. 90 nights detects a sink exceeding the core on **63.1%**; 365 nights on **56.5%**. |
+| **C3 level anchor** | 🟢 one instrument | settles the W11 discrepancy on its own. **Registered in advance:** if the reference reads BELOW the model, the three low-cost records were right and the model reads high — not to be explained away by preferring the record that agrees. |
+
+⚠ **E2 vertical transect also demoted.** At 5 sites the detection limit is **|rho| >= 0.942**,
+close to a perfect monotone relationship. Adding transect sites is the cheapest route to making
+it confirmatory in a later campaign, noted so the option stays visible.
+
+### Why this matters beyond the campaign
+
+**Second time in this project that computing a detection limit in advance changed what was worth
+DOING rather than how it would be reported.** The first (Chapter 8 / OSF `2jyfg`) converted five
+uninformative nulls into one bounded claim. This one stopped a campaign being sold for something
+it could not deliver, **while the cost of changing course was still a paragraph.**
+
+### Corrections forced by this
+
+1. Thesis §9.7 rewritten: the falsification subsection previously said both outcomes were worth
+   the money and the ceiling question was answerable. It is not, at this size.
+2. §9.7's opening list: "testing whether the spatial ceiling is a sampling artefact" replaced by
+   "testing the flow physics the model imposes and has never validated".
+3. `sensor_placement_plan_2026-09-05.md` §6 rated this **"Probably"** and flagged that the limit
+   should be computed. Computing it moved it to **"NOT AT ALL"**. The reversal is left visible in
+   the document rather than silently edited.
+
+🟢 **LODGED ON OSF 2026-09-06T02:10:05Z as [`ad3py`](https://osf.io/ad3py/)**, project
+[`r7a3w`](https://osf.io/r7a3w/), Open-Ended Registration, full text in the project wiki.
+**Genuinely prospective**: no instrument bought, no site visited, no observation exists.
+
+⚠ **Two OSF API traps, recorded because they cost three failed POSTs.** A registration is
+refused without a subject, and the two endpoints demand DIFFERENT shapes for the same
+information: `/nodes/{id}/` wants `subjects` as a list of full hierarchical PATHS from the
+taxonomy root, `/draft_registrations/{id}/` wants a FLAT list of leaf ids. Setting only the node
+leaves the refusal in place while naming the node, which misdirects. Both are now set by
+`scripts/osf_lodge.py`, which also queries the collection **before** creating anything and
+refuses to lodge a second registration with the same title (gotcha #89).
+
+Claims: `camp.*` (8). Registration void conditions are stated in the prereg §5.
+
+
+## F.101 — costing the campaign, and a re-scope that is not worth doing
+
+`scripts/campaign_costing.py` → `campaign_costing.{csv,json}`. Plan §8 and §9; thesis §9.7.
+
+### The budget has a shape, and it is not the one the re-scope question assumed
+
+| line | n | unit USD | USD | provenance |
+|---|---:|---:|---:|---|
+| low-cost outdoor monitors | 38 | **225** | 8,550 | **vendor published**, AirGradient Open Air O-1PST |
+| spares, 15% | 6 | 225 | 1,350 | design choice, not a citation |
+| **low-cost subtotal** | 44 | | **9,900** | (kit build: **5,500**, saves 4,400 + assembly labour) |
+| reference anchor | 1 | 10,000–40,000 | 10,000–40,000 | **US EPA: regulatory monitors cost "tens of thousands". A RANGE from a public statement, NOT a quote** |
+| **INSTRUMENT SUBTOTAL** | | | **19,900–49,900** | |
+
+⚠ **NOT costed, deliberately:** mounting, enclosures, power, connectivity, import duty,
+installation labour, 12 months servicing, co-location space. None is published for Sri Lanka.
+Each is a line item with an empty unit price. **A number typed there would be a guess wearing a
+budget's clothes.**
+
+🟢 **AirGradient chosen for CONTINUITY, not price.** The project already holds per-device
+calibration coefficients for AirGradient units (gotcha #37) and the ingest already classifies
+them (gotcha #38). A different vendor means re-deriving a calibration that is in hand.
+
+### 🔴 The largest line may not be a purchase
+
+The anchor is **1× to 4× the entire low-cost network**. CEA has granted access in principle to a
+Kandy regulatory station with hourly PM2.5/PM10/gases and full met including a rain gauge. **If
+that agreement completes, C3 is answered by a letter and the subtotal falls to ~9,900.** A
+campaign costed without pursuing that route first **overstates its own price by more than the
+rest of the budget combined.**
+
+### 🔴 THE RE-SCOPE IS NOT WORTH DOING, and that is the finding
+
+F.100 demoted H1, which was the design stratum's main justification. Cutting the stratum:
+
+| design sites | ks_mean | vs 12 | saved USD | verdict |
+|---:|---:|---:|---:|---|
+| 12 | 0.1297 | — | — | registered design |
+| **10** | 0.1292 | **−0.0005** | **450** | **indistinguishable** |
+| 8 | 0.1401 | +0.0104 | 900 | real but small, **+8%** |
+| 6 | 0.1673 | +0.0376 | 1,350 | **cliff, +29%. Do not.** |
+
+**Cutting 12→10 saves 450 dollars — under 3% of the low-end subtotal.** At 225/unit **no
+plausible re-scoping of a low-cost network changes the shape of this budget.** The anchor does.
+**Recommendation: keep the stratum at 10 or 12 indifferently; spend the effort on the CEA
+agreement.**
+
+⚠ Does **not** void `ad3py`: the stratum serves E1, already exploratory, and the void conditions
+(§5) concern the paired triplets, the nights and the anchor. Reported as a dated deviation.
+
+### The three tensions, resolved
+
+**(1) The stratum lost its justification.** Partly true. Two survive: the exploratory spatial
+test, and — newly — **it would make Kandy the only deliberately sited city in a 48-city panel of
+convenience samples**, which is worth more to the multi-city frame than to Kandy. 🟢 That
+justification was arrived at AFTER the original failed and is labelled as such, not presented as
+foresight. And §8.4 makes it moot on cost.
+
+**(2) Saturation is not a power criterion.** True, and **the number was over-precise.** 10 and 12
+sites differ by **0.0005** against a seed s.d. of **0.0092**. 🔴 **The saturation point is a RANGE
+of 10–12, not a value of 12**, and the figure's single dashed line is corrected to a band. New
+claims `net.saturation_{lo,hi,seed_sd}`. ⚠ Caught a second defect while fixing it: the first
+implementation anchored "indistinguishable" on the range MINIMUM rather than on the design point,
+returning lo = hi = 16, which answers a question nobody asked.
+
+**(3) C1 rests on one 2008 PM10 measurement.** True, **and the test is robust to it**, which is
+what matters. The decision rule uses **the model's own 1.58 prediction**, not the 27.5 figure:
+C1 holds if the observed ratio exceeds 1.58 by more than the resolution (**1.044** at 7 days).
+If the truth is 3, or 5, or 10, C1 still resolves it. It becomes marginal only if the truth sits
+within ~0.04 of 1.58 — **which would itself be the finding**, since it would mean the model's
+fine surface is right about within-cell contrast.
+
+Claims: `cost.*` (12), `net.saturation_{lo,hi,seed_sd}`.
+
+
+## F.102 — 🔴 TWO sensors was Kandy's number, not a measured optimum. The saturation is at ONE.
+
+`scripts/station_count_curve.py`. Prompted by the user asking whether the ladder's emphasis on
+two sensors reflected Kandy having two, or a genuine finding. **It reflected Kandy having two,
+and the spec says so in as many words.**
+
+### The design choice, documented and never disclosed in the prose
+
+`src/modular/budgets.py`:
+* `SENSOR_PAIR = "sensor_pair"  # <= 2 local low-cost sensors (the Kandy budget)`
+* `BUD1` note: *"two elevation-gradient sensors. **The deployed Kandy budget.**"*
+
+So the first ground rung was sized to match the demonstration city. Defensible as a design
+choice — the point is to price the tier Kandy occupies — but **the two-station figure had never
+been checked against any other count**, and the thesis reported "the first two sensors buy 17.8
+per cent" as though two were a measured optimum.
+
+### 🔴 THE SWEEP: one station does essentially all the work
+
+Same frame, same `Bud0c`, same seed, only k varies. Each k shrunk toward the SENSORLESS rung so
+every count is scored against the same parent (chaining k-1 → k would be path-dependent).
+
+| k | cities | cumulative gain | step |
+|---:|---:|---:|---:|
+| **1** | 47 | **17.02%** | **+17.02** |
+| 2 | 48 | 17.85% | +0.83 |
+| 3 | 48 | 17.38% | −0.46 |
+| 4 | 48 | 18.50% | +1.11 |
+| 5 | 48 | 18.82% | +0.33 |
+| 6 | 48 | 18.60% | −0.23 |
+| 7 | 48 | 17.98% | −0.62 |
+| 8 | 42 | 17.36% | −0.62 |
+
+**Non-monotone from k=2 onward**, which is the signature of noise rather than structure. Paired
+within city and bootstrapped over cities (2000):
+
+| k vs 1 | paired median | 95% |
+|---:|---:|---|
+| 2 | **+0.01 pp** | [+0.00, +0.10] |
+| 4 | +0.13 pp | [+0.00, +0.42] |
+| 8 | +0.15 pp | [+0.00, +0.70] |
+
+🟢 **No count from 2 to 8 beats one station by more than 0.15 percentage points.** One station
+gives **17.02% [4.98, 21.83]**.
+
+**The redundancy begins at the SECOND monitor, not the third.** This makes the finding STRONGER
+than the ladder's own rungs could express: *one local observation captures essentially everything
+a city-mean model can extract from local observation.*
+
+⚠ Pooled, **not band-stratified** — does not establish that one station suffices inside the
+deep-tropical band where F.97's inversion is measured. ⚠ Prices stations for a DAILY CITY-MEAN. A
+second sensor is what makes a between-sensor comparison possible at all, which is how the
+`donor.kandy_sensor_reliability` = 0.603 and the interval centring of §7.9 were obtained. **A pair
+buys quality assurance the model does not score.**
+
+### 🔴 AND A PROSE ERROR THE SWEEP EXPOSED
+
+`ladder()` sets `b2 = pool[:min(6, len(pool))]` — the second ground rung uses **SIX** stations, so
+the step from `Bud1` adds stations **3, 4, 5, 6**. The thesis described it as **"monitors three to
+eight"** in six places, plus "three through eight" in Ch9 and T9_1.
+
+Not merely wider: **the two ranges have opposite signs.** Stations 3→6 give **+0.75 pp**;
+stations 3→8 give **−0.49 pp**. All nine occurrences corrected to "three to six" or reworded.
+
+⚠ **Claim keys containing `stn3to8` are HISTORICAL AND WRONG** (`boot.*.stn3to8.*`,
+`order.stn3to8_*`). They describe the 2→6 step. **Not renamed**: a key rename breaks every
+reference in one commit and the gate cannot distinguish a rename from a drift. The notes carry
+the correction and the prose says "three to six".
+
+### Family
+
+Third instance of spec, prose and implementation disagreeing without anything catching it —
+after **F.84** (`Bud0` using one of three admitted streams) and gotcha **#85** (MAIAC coverage
+inherited from a different stream's pull). Every gate in the project checks that a number is
+CURRENT; none checks that a number is DESCRIBED correctly. **Found by a user asking why the
+number was two.**
+
+Claims: `stn.*` (7).
+
+
+## F.103 — 🔴 deliberate siting does NOT beat convenience siting, tested on 43 dense-network cities
+
+`scripts/siting_experiment.py` → `siting_experiment{,_fixed}.{csv,json}`. Prompted by the user
+pointing out the obvious: F.100 said ONE city cannot test the campaign's premise, but the panel
+is full of cities with dense networks, and **each of them can be made into both designs by
+choosing which of its own stations to fit on**.
+
+### The design
+
+43 cities, 601 stations, 7 covariates. Half of each city fitted, half held out, 40 repeats.
+Four fitting subsets, same RidgeCV model on each, Spearman against the held-out stations.
+
+* `clhs` — conditioned Latin hypercube over station covariates. **The proposed design.**
+* `convenience` — most road nearby. **What compliance networks actually do**, and what produced
+  every frame this project has measured a null on.
+* `spread` — maximin geographic separation.
+* `random` — the baseline.
+
+⚠ The model MUST be multi-covariate. A monotone function of one covariate cannot have its
+held-out RANKING changed by the fitting set, so the experiment would be vacuous by construction.
+
+### 🔴 THE RESULT, and the trap inside it
+
+| method | median rho | best in |
+|---|---:|---:|
+| **clhs** | **0.257** | 16 |
+| spread | 0.200 | 8 |
+| **convenience** | **0.143** | 12 |
+| random | 0.143 | 7 |
+
+That table says deliberate siting nearly DOUBLES convenience siting. **It is wrong.**
+
+**Paired within city: −0.044 [−0.095, +0.118], winning in 19/43 — FEWER THAN HALF.**
+
+🔴 **Difference of medians +0.114 against a paired median of −0.044.** They point opposite ways,
+and the difference of medians is the flattering one. **SECOND TIME IN ONE SESSION** — F.102's
+temperate band did exactly this (+12.91 vs +0.14). Both times the project's standing rule,
+*median of ratios and never a ratio of medians*, is what catches it. Had the median table been
+reported, the claim would have been that deliberate siting doubles spatial skill.
+
+⚠ **UNDETECTABLE, not refuted.** The interval spans zero and does not exclude a +0.118 advantage.
+
+### ⚠ The promised robustness check RETURNED NOTHING, and the reason is arithmetic
+
+Each method picks its own fitting set, so each is scored on a DIFFERENT held-out set — a method
+could win by leaving an easier remainder. The docstring promised a fixed-holdout re-check before
+any winner was believed. It was run (`--fixed-holdout`, `_fixed` outputs).
+
+🔴 **It is uninformative by construction on this panel.** Median city = 12 stations, so a
+held-out third = **4**, and a Spearman on 4 points is **quantised to steps of 0.1** (observed
+commonest values: exactly 0.4, 0.8, −0.4). Every paired median collapsed to **exactly 0.0000 with
+a zero-width interval**, and clhs/convenience/random all showed median rho 0.200. Settling it
+needs cities of 24+ stations to leave 8 held out; about **five** exist. **Reported as a limit of
+the panel, NOT as a confirmation.**
+
+### 🔴 CONSEQUENCE: the campaign's spatial ambition is dead TWICE OVER
+
+* **F.100**: a campaign of this size cannot DETECT a siting effect at Kandy (needs 96–304 sites).
+* **F.103**: there is probably no siting effect TO detect.
+
+The exploratory spatial test that survived F.100 does not survive F.103. **The campaign must no
+longer be described as testing the spatial ceiling in any form.** And the gap between published
+LUR (R² 0.43–0.83) and this project's convenience frames (rho ~0.3) is **NOT explained by
+siting** — it is information.
+
+**Design stratum:** its founding justification is gone. Two thin ones remain — making the
+exposure field checkable beyond the three paired locations, and making Kandy the only
+deliberately sited city in a 48-city convenience panel (itself weakened by this very result).
+⚠ Per F.101 the cost either way is <3% of the instrument budget, so **this is a question about
+what the campaign CLAIMS, not what it costs.**
+
+### Minor
+`--tag` wrote `_fixed` outputs correctly but the final `print` still named the defaults, which
+for several minutes looked like the primary result had been overwritten. Fixed to print what was
+written.
+
+Claims: `site.*` (13).
+
+
+## F.104 — 🟢 cities are NOT independent units, the intervals were too narrow, and every conclusion survives anyway
+
+`scripts/cluster_bootstrap.py` → `cluster_bootstrap.{csv,json}`. Raised by an external reviewer
+and correct as stated: the ladder's intervals resample cities independently, but cities share
+national programmes, instrument fleets, siting conventions, calibration practice and processing
+chains. **Eleven of the forty-eight belong to one national network.**
+
+### The construction
+
+A two-level bootstrap: clusters resampled with replacement, then cities resampled within each
+drawn cluster. The cluster is (network × country); CNEMC is one cluster of 11, OpenAQ cities
+cluster by country. **48 cities fall into 29 clusters, 23 of them singletons.**
+
+### 🔴 The reviewer is right about the width
+
+| step | median | city 95% | **cluster 95%** | wider by |
+|---|---:|---|---|---:|
+| first two sensors | 17.85 | [4.57, 23.49] | **[4.53, 31.94]** | **1.45×** |
+| stations three to six | 0.10 | [0.03, 0.89] | **[0.02, 1.37]** | **1.56×** |
+| a background series | 40.55 | [27.89, 45.31] | **[22.30, 49.93]** | **1.59×** |
+
+On the MAIAC ladder the background rung widens by **1.97×**. So the city count overstates the
+effective sample size everywhere, and **an interval quoted over cities is optimistic by roughly
+half again.**
+
+### 🟢 And every conclusion survives, the null most of all
+
+- The background remains the largest gain, with a lower bound of **22.3%**.
+- **Stations three to six remain bounded above by 1.37%** (0.54% on MAIAC). *A null that
+  survives a wider interval is strictly stronger than one that does not*, so the redundancy
+  result is **improved** by the objection rather than damaged by it.
+- The first two sensors keep a lower bound of 4.5%.
+
+### 🟢 THE DEEP-TROPICAL INVERSION IS COMPLETELY UNAFFECTED — and the reason matters
+
+| stream | paired | city 95% | cluster 95% |
+|---|---:|---|---|
+| GHAP | +3.60 pp | [−14.34, +36.27] | **[−14.34, +36.27]** |
+| **MAIAC** | **+33.34 pp** | [+7.00, +50.07] | **[+7.00, +50.07]** |
+
+Identical to four decimal places. **The 13 deep-tropical cities fall into 12 clusters**, so that
+band is almost entirely singletons and there is no clustering to correct for. The reviewer's
+objection therefore bites on the **pooled** numbers, which are dominated by CNEMC, and **not on
+the band-stratified recommendation that Kandy actually depends on.** That is a useful and
+slightly surprising asymmetry: the pooled result is the one with the dependence problem.
+
+### 🔴 A statistic that had to be withdrawn from its own output
+
+The first run reported an intra-class correlation of **0.82 to 0.99**, which reads as
+overwhelming network dependence. **It is an artefact of the grouping.** Twenty-three of the
+twenty-nine clusters hold a single city, and a singleton has zero within-cluster variance by
+construction, so its entire deviation is booked as between-cluster variance and the statistic is
+dragged toward one regardless of the truth. Restricted to cities that have a cluster sibling the
+ICC is **0.23 to 0.65** — still substantial, and now meaningful. **The honest headline diagnostic
+is the interval width ratio**, which comes from resampling and carries no such artefact.
+
+Claims: `clust.*` (23).
+
+---
+
+## F.105 — 🟢 the spatial null is a property of the DATA, not of one model family — seven families, none wins
+
+`scripts/spatial_tournament.py` → `spatial_tournament.{csv,json}`. The external reviewer's
+methodological omission, fairly identified: the registered null compared one learned family
+against one raster, and never tried the conventional spatial toolkit.
+
+### 🔴 A distinction the objection does not make, and it decides half the answer
+
+Two of the four families named — **kriging and geographically weighted regression** — estimate a
+surface *from observations at the target*. Kriging interpolates between measured points; GWR fits
+a local regression around each location from nearby measured points. **A city with no monitors has
+no nearby measured points.** They are `Bud4` methods proposed for a `Bud0` problem. Rather than
+exclude them by argument the tournament runs twice, admissible and oracle.
+
+### The admissible arm — leave-one-CITY-out, 47 cities, 636 stations, 60 predictors
+
+| family | median ρ | paired vs benchmark | 95% over cities | beats |
+|---|---:|---:|---|---:|
+| **benchmark** (built-up 2.4 km) | **0.301** | — | — | — |
+| GP on covariates | 0.301 | **+0.018** | [−0.012, +0.056] | 25/47 |
+| random forest | 0.280 | −0.026 | [−0.091, +0.047] | 20/47 |
+| **stepwise LUR** (as published) | 0.266 | **+0.010** | [−0.049, +0.070] | 26/47 |
+| ridge / mixed effects | 0.250 | −0.000 | [−0.091, +0.073] | 23/47 |
+| elastic net | 0.212 | −0.012 | [−0.057, +0.062] | 22/47 |
+| gradient boosting | 0.196 | −0.081 | [−0.119, +0.091] | 19/47 |
+
+**Not one admissible family beats the benchmark by more than the registered detection limit of
+0.130.** The best is +0.018. **Conventional stepwise land-use regression — the exact class the
+reviewer named, and the class that reaches R² 0.43–0.83 in published campaigns — buys +0.010.**
+A linear mixed model with a city random intercept, the hierarchical structure asked for
+separately, is indistinguishable from ridge.
+
+### The oracle arm — the target city's OWN stations visible, and it is WORSE
+
+| family | median ρ |
+|---|---:|
+| IDW | 0.190 |
+| GWR | 0.073 |
+| kriging | 0.048 |
+
+🔴 **All three sit below the admissible benchmark of 0.301.** A city that HAS a network, using the
+methods designed for that case, ranks its own stations worse than a single free raster ranks a
+city it has never seen. This independently reproduces **F.60** and extends it from IDW to kriging
+and GWR.
+
+### 🔴 A BROKEN FIRST RUN, and the mechanism is worth keeping
+
+The oracle arm first reported kriging at **−0.833** — not poor but near-perfect *anti*-correlation,
+which is a signature of an artefact rather than a result. Cause: the target was standardised within
+city using **every** station, so it sums to zero; hold one out and the mean of the remainder is
+exactly −z_i/(n−1), a strictly decreasing function of the held-out value. **Measured directly, the
+leave-one-out training mean correlates with the held-out value at exactly −1.000 in all 46
+cities.** Any model reverting toward its training mean is dragged toward −1 whatever its skill.
+The fix is the standard rule that was broken: **fit the normalisation on training points only.**
+Corrected, kriging is 0.048. The admissible arm never had the problem, because the whole target
+city is withheld.
+
+Claims: `tour.*` (21).
+
+---
+
+## F.106 — 🔴 the representativeness error IS externally identifiable, and it is 2.6 to 17 times too small
+
+`scripts/srep_external_check.py` → `srep_external_check.{csv,json}`. The reviewer's sharpest
+technical point, quoted in the script: *"you are effectively asking the model to help estimate how
+wrong its own unresolved spatial representation is. What external information identifies `s_rep`?"*
+
+### The external identification
+
+Wherever two or more instruments fall **inside one model cell**, the spread between them measures
+the point-versus-area error directly, with no field consulted and no pattern assumed. The panel
+contains **14 such cells holding 36 instruments across 12 cities**; Kandy's 2004–06 transect
+contains **3 more holding 7 sites**.
+
+| source | within-cell CV | × the model |
+|---|---:|---:|
+| **panel instruments** | **0.140** | **2.6** |
+| **Kandy transect** (lower bound) | **0.911** | **16.9** |
+| model `s_rep` proxy | 0.054 | 1.0 |
+
+🔴 **The estimator is too small by a factor of at least 2.6, and at Kandy by at least 17.** The
+Kandy figure is a *lower* bound because three of its seven sites are censored at an upper sampling
+limit, and censoring can only shrink an observed spread — so the bias runs toward the model and
+cannot have manufactured the conclusion.
+
+### ⚠ WHAT THIS DOES AND DOES NOT AFFECT — the distinction decides the consequence
+
+`representativeness_sigma` appears **only** in `src/modular/observation.py` and its tests. It is
+**not wired into production**, and the shipped 90% interval's width comes from the conformal
+`T05–T95` propagation instead. So this does **not** overturn gotcha #75: the shipped width is
+right for the **areal** quantity, and de-biasing each sensor's own offset still restores coverage
+to 92.2%.
+
+What it does is **catch a defect in the target architecture before it did any damage.** The
+specification requires the observation model to exist *before* any CEA or NBRO record is ingested,
+precisely so the first comparison is not another naive co-location. Had `s_rep` been wired in as
+written, the first point-level interval built against real Kandy data would have been **too narrow
+by a factor of three or more**, and the resulting apparent over-confidence would have looked like
+a field error rather than an operator error.
+
+**The honest statement, now with a number:** the interval is calibrated for an areal quantity and
+understates point-level uncertainty; the observation model must take `s_rep` from co-located
+instruments, not from the field's own neighbourhood gradient.
+
+Claims: `srep.*` (8).
+
+---
+
+## F.107 — 🟢 an independent Sri Lankan calibration study corroborates F.63 and prices the instrument-class confound
+
+Senarathna, Attanayake, Bergin, Bhave, Vithanage, Harischandra & Bowatte (2026), *Environmental
+Monitoring and Assessment* **198**(7):786, DOI `10.1007/s10661-026-15623-4`, published 2026-06-30.
+Verified through Crossref and Europe PMC. Flagged by an external reviewer as absent from the
+bibliography; it was published after the literature sweep.
+
+**Three of its authors are already load-bearing in this project** — Senarathna supplies the
+diurnal reference, Attanayake the RF-CNN record (F.65), and Bowatte is the supervising author.
+
+### What it supplies
+
+- 🟢 **INDEPENDENT CORROBORATION OF F.63.** *"The effectiveness of calibration models developed in
+  Colombo decreased when they were applied to PM2.5 data from Kandy, suggesting limited
+  transferability across different climatic zones."* F.63 reached the same conclusion from a
+  different quantity — daily concentration correlation **r = 0.604** against a **0.846** benchmark
+  — and concluded the central highlands decouple coastal Colombo from inland Kandy. **Two
+  unrelated measurements, one conclusion. Colombo stays refuted as a Kandy donor.**
+- 🔴 **A MECHANISM FOR THE INSTRUMENT-CLASS CONFOUND.** Applying a wet-season calibration to
+  dry-season data produces a mean absolute percentage error of **26.57%**. The deep-tropical cell
+  of this project's panel is **69–77% low-cost**, against 25% elsewhere, so a season-dependent
+  calibration error is a concrete route by which part of the band difference could be **measurement
+  behaviour rather than atmospheric behaviour**. This does not overturn the inversion — it names
+  the confound the thesis had only been able to label.
+- 🟢 **A BOUND ON DEVICE-TO-DEVICE NOISE.** Harmonised sensors agree to **10% variability**, which
+  is the quantity behind `w_Bud2` differing between reference (0.000) and low-cost (0.900) strata:
+  averaging more low-cost devices cuts noise, averaging more reference monitors does not.
+- ⚠ **A LIVE QUESTION ABOUT THE TORRINGTON PARK BAM.** The study's Kandy reference is a **BAM-1020
+  at Torrington Park**, the instrument this project recorded as **defunct** on the user's report
+  (2026-08-22). Either the record is historical or the instrument was operating during their
+  campaign. **This is worth resolving**, because F.101 prices a reference anchor at 10,000–40,000
+  USD and a working or recoverable BAM in Kandy changes the largest line in the campaign budget.
+  Recorded as an open question, not a correction.
+- 🟢 Kandy-specific models incorporating temperature and relative humidity reach **R² 0.84 wet /
+  0.92 dry**, so a well-calibrated low-cost sensor at Kandy is achievable — relevant to the
+  campaign's co-location protocol.
+
+⚠ Different sensor type from FECT's (TSI BlueSky against PurpleAir), so this does not directly
+re-validate W5; it corroborates the *practice*, not the specific slopes.
+
+
+## F.108 — 🔴 an abstract sentence that mislabelled which sensitivity axis it was quoting
+
+Caught by the external reviewer on the rebuilt document. The abstract read *"sensitive to the
+definition of the background window across the range 0.466 to 0.501"*. **Those numbers are the
+min and max over ANCHORED YEARS** (`partition.f_lo`/`f_hi`), not over window definitions. The
+partition has **three separate sensitivity axes** and the body reports all three correctly:
+
+| axis | range |
+|---|---|
+| anchored years | **0.466 – 0.501** |
+| `F_min` parameter sweep, fourfold | 0.482 – 0.509 |
+| **background-window form** (calendar-day → 24 h → 48 h) | **0.489 – 0.547** |
+
+The abstract attached the right numbers to the wrong descriptor, which understated the
+window-form sensitivity by excluding its largest member — the 48-hour form at 0.547, which the
+body already flags as drifting because the window exceeds the timescale on which `B` is defined.
+**Introduced 2026-09-07 while tightening the abstract in response to the same reviewer's earlier
+round**, so it is a defect created by a correction. Now reads: *across the anchored years the
+fraction ranges 0.466 to 0.501; alternative background-window definitions give 0.489 to 0.547,
+the upper end belonging to a window longer than the timescale on which the background is defined.*
+
+⚠ **The claims gate could not have caught this.** Every token resolved correctly; what was wrong
+was the English clause naming what the tokens measured. **The gate protects values, not the
+sentences that describe them** — the third distinct instance of that limit after gotchas #86
+(a figure drawing a retired input) and #90 (a build reading a stale table).
+
+### The rest of the round was claim calibration, not repair
+The reviewer's own framing, and it is the right one: *"the core experimental architecture works;
+some individual estimands need narrower interpretation."* Four wordings tightened, none of them a
+model change.
+- **The deep-tropical ordering** now carries its own bounding sentence: *the available panel
+  supports a deep-tropical ordering in which local observations outperform the background proxy;
+  the extent to which that reflects an atmospheric regime rather than a measurement regime remains
+  unresolved.* Abstract and §7.3 both.
+- **The background rung's conditionality reaches the abstract**, including the fall to
+  **37%** donor recovery in Kandy's own stratum, so the abstract states transferable information
+  rather than a figure a rural station would deliver at Kandy.
+- **The partition's first appearance** (§2.3, where a reader meets it before Chapter 6) now
+  carries the assumptions and the "not a source apportionment" qualifier, which previously lived
+  only in §6.6.
+- **"Marginal predictive value" is now the dominant term in results**: §7.2's heading, Table 7.1's
+  caption, and the abstract's statement of the estimand. *Value of information* is reserved for
+  the conceptual frame in Chapter 3. Table 7.1's `Bud1 → Bud2` row also had "six further sensors"
+  where the code takes `pool[:6]`; corrected to **stations three to six** (gotcha #92 again, a
+  tenth site).
+
+
+## F.109 — 🔴 THE KANDY RECOMMENDATION IS A STATEMENT ABOUT AVERAGE DAYS; ON EPISODES THE ORDERING REVERSES
+
+`scripts/loss_sensitivity.py --stream maiac` → `loss_sensitivity.{csv,json}`. The external
+reviewer's largest surviving methodological point: *"your entire observation-value framework uses
+daily RMSE... a station that contributes almost nothing to ordinary daily RMSE might be extremely
+valuable for high-PM episodes."* The thesis had conceded this in prose. **Conceding is weaker than
+measuring, so the ladder was re-scored.** Nothing about the construction requires RMSE: the tiers
+are nested and the shrinkage is fitted identically whatever the scoring rule.
+
+Four losses, on the **honest MAIAC stream** (scoring this on the retired fused product would not
+answer the question asked): `rmse` · `mae` · **`tail`**, RMSE on days in the city's observed top
+decile · **`exceedance`**, one minus balanced accuracy at the WHO 24-hour guideline of 15 µg/m³.
+
+### 🟢 Two results are LOSS-ROBUST, and one of them is strengthened
+
+| step | rmse | mae | tail | exceedance |
+|---|---:|---:|---:|---:|
+| first two sensors | 22.88 | 23.13 | **5.22 [−3.3, 15.6]** | **0.00 [−1.3, 4.8]** |
+| **stations three to six** | **0.13** | **0.00** | **0.00** | **0.00** |
+| **a background series** | 33.13 | 34.08 | **39.47** | **33.42** |
+
+🟢 **The redundancy null survives every loss.** The natural counter-argument — that extra stations
+earn their keep on episodes rather than on average days — is exactly what `tail` and `exceedance`
+would reveal, and they show **zero under both**. This is the single most exposed result in the
+thesis and it is now the most robust.
+🟢 **The background rung is largest under every loss, and largest of all on the TAIL (39.47%).**
+A regional background carries the episode signal, which is coherent with W2: Kandy's episodes are
+substantially transboundary events, and a background series is what sees them coming.
+
+### 🔴 AND THE RESULT THAT DOES NOT SURVIVE IS THE ONE KANDY DEPENDS ON
+
+The deep-tropical inversion, paired within city, n=13:
+
+| loss | local minus background | 95% over cities | favours |
+|---|---:|---|---|
+| rmse | **+33.67 pp** | [−2.28, +53.38] | local |
+| mae | **+42.21 pp** | [−13.26, +50.40] | local |
+| **tail** | **−16.38 pp** | [−26.22, +15.78] | **background** |
+| **exceedance** | **−7.57 pp** | **[−32.10, −2.68]** | **background, EXCLUDES ZERO** |
+
+🔴 **The ordering flips sign between average-day and episode losses, and on exceedance the
+interval excludes zero in the background's favour.** The recommendation that Kandy should buy a
+local observation before a regional one is therefore **a statement about daily city-mean accuracy**.
+If the purpose is exceedance detection or health alerting — which Chapter 2 names as a stake —
+**the measurement says the opposite.** The reviewer predicted precisely this and it is what
+happened.
+
+⚠ **This does not overturn Chapter 9's recommendation; it scopes it.** The delivered product is a
+daily city-mean field, and for that product local wins. What changes is that the recommendation
+may no longer be stated without naming its loss.
+
+### ⚠ A fragility worth recording about the headline itself
+This reimplementation reproduces the recorded RMSE inversion median closely (**+33.67** here
+against the recorded **+33.34**) but its interval **includes zero** where the recorded one excludes
+it (**[+7.00, +50.07]**). The difference is resampling detail on **n = 13**, not a disagreement
+about the estimate. **An interval on thirteen cities that excludes zero under one bootstrap and
+not under another is not a robust exclusion**, and the inversion should be quoted with that
+fragility attached rather than as a clean significance claim.
+
+Claims: `loss.*` (39).
+
+
+## F.110 — 🔬 two independent reviewers, one measurable style claim, and five results promoted or demoted
+
+Two further external assessments of the finished thesis, both landing at **91–93/100** and both
+agreeing the methodology is sound and the remaining work is claim calibration. No computation
+overturned anything; what changed is what the document *emphasises*.
+
+### 🔴 A style claim that was checkable, and was checked
+Reviewer 2 wrote that the construction *"X is not Y. It is Z"* recurred **"dozens of times almost
+verbatim"** and might read as machine-written. **Counted, it appears 8 times in 33,694 words.**
+The specific charge is wrong. But the underlying diagnosis is right, and two other tics are
+genuinely uniform:
+
+| tic | before | per 1000 words | after |
+|---|---:|---:|---:|
+| `rather than` | 189 | 5.6 | **147** |
+| paragraph-opening **bold** | 178 of 535 paragraphs (**33%**) | — | **78 (15%)** |
+
+Both ran at a near-constant rate in *every* chapter (4–8 and 2–12 per 1000), which is what makes a
+voice read as machine-set. Thinned with rotating alternatives so that removing one tic did not
+install another, skipping any occurrence already preceded by a comma. **Three rewrites broke the
+sense and were repaired by hand** — one inverted a comparative (*"specifying one of those counts,
+not the other"*), two were merely awkward. **A mechanical style pass needs a human read of every
+diff**; the guard rails prevented syntax errors, not meaning errors.
+
+### 🟢 Promoted: the dispersion failure is a headline, not a caveat
+Both reviewers said the same thing and they are right. The raw emission surface ranks
+neighbourhoods at **0.371**; passing it through the terrain-steered dispersion solver **lowers**
+that to **0.274**, improving **3 of 10** cities. That was reported honestly in §8.4 and §6.1 and
+mentioned in neither the abstract nor Chapter 1. **The measurement framework works better than the
+spatial model it was built to evaluate.** Now stated in both.
+
+### 🟢 Promoted: the loss reversal reaches the abstract
+A skimming examiner could previously have missed that the Kandy recommendation inverts on episode
+and exceedance losses (F.109), because it lived in §7.2.1 and §9.1. It is now in the abstract and
+in Chapter 1's summary.
+
+### 🔴 Demoted: the attributable-burden projection moved to **Appendix E**
+Both reviewers, independently. Labelling it an illustrative projection was not enough, because a
+figure of the form *"N deaths per year"* detaches from its caveats the moment anyone quotes it and
+its interval propagates only the response-function uncertainty. §7.11 keeps the **exposure
+weighting**, which is a measurement on this project's own raster; the mortality arithmetic is an
+appendix with its own statement of why it is not a result.
+
+### Four further narrowings
+- **`partition.f` now prints to three significant figures, 0.483 not 0.4828.** The fourth digit is
+  unsupported: the value moves 0.035 across anchored years and 0.058 across window forms. Displaying
+  it read as *overclaiming by formatting* next to scrupulously hedged prose.
+- **"Any analysis that prices observations against a covariate trained on them will under-price
+  them"** → the measured statement: *in this nested construction, contamination showed up as an
+  understatement of the rung above, not an inflation of the contaminated rung*. Generality untested.
+- **What is validated is named**: a budget-matched measurement procedure on **monitored valley and
+  basin cities**, applied to a monitorless one **by analogy**. The target is by construction the
+  kind of city the validation set excludes, so the transfer is resemblance, not a transportability
+  theorem.
+- **Reproducibility restated as auditable and reproducible *conditional on obtaining the source
+  datasets***, which the third-party data licences make the honest ceiling.
+
+⚠ **Raised and NOT acted on, because it is the user's call:** reviewer 2 suggests the title and
+framing should say outright that this is a value-of-information study carrying a Kandy case study,
+not a Kandy air-quality map. The thesis argues that in its text; the title does not.
+⚠ **Declined, on standing instruction:** both reviewers asked for a 15–25% length cut. Thesis
+length is not a concern for this user, and the round added measured content.
+
+
+## F.111 — 🟢 EO foundation-model embeddings do NOT break the spatial ceiling, and now the null is BOUNDED
+
+`scripts/embedding_spatial_test.py` → `embedding_spatial_test.{csv,json}`.
+**Registered at OSF [`6udm3`](https://osf.io/6udm3/)** (project `ng2tc`), lodged
+2026-09-09 **before the script was written**. Prereg: `docs/prereg_embedding_spatial_2026-09-09.md`.
+
+### Why it was run, given six prior nulls
+One of those six used AlphaEarth embeddings (F.27) and returned partial ρ **+0.066**, p = 0.80. But
+**F.28 already retracted how hard that null could push**: its minimum detectable partial ρ was
+**0.65 / 0.82 / 0.96** on 17 / 10 / 6 stations. It excluded only a *large* effect. Meanwhile F.105
+built a frame resolving **0.130** on **47 cities and 636 stations**, and the embeddings had never
+been tested on it. An external reviewer independently named the gap: the benchmark is *"the best
+predictor among the predictors you happened to assemble, not a mathematical maximum."*
+
+### The result: all three confirmatory tests fail, as registered
+
+`GOOGLE/SATELLITE_EMBEDDING/V1/ANNUAL`, 64 dims, 10 m, 2023 mosaic, 100 m buffer, **100% coverage
+of 636 stations**. Leave-one-CITY-out, both sides standardised within city.
+
+| model | median ρ |
+|---|---:|
+| benchmark raster (`lc_built_2400`) | 0.301 |
+| **embeddings alone** | **0.327** |
+| 60 existing predictors | 0.250 |
+| existing + embeddings | 0.273 |
+
+| test | paired | 95% over cities | wins | verdict |
+|---|---:|---|---:|---|
+| **E1** embeddings vs benchmark | **−0.028** | [−0.170, +0.084] | 21/47 | fail |
+| **E2** +embeddings vs existing | **−0.002** | [−0.064, +0.049] | 23/47 | fail |
+| **E3** partial ρ, benchmark removed | **+0.191** | **[−0.007, +0.355]** | — | undetectable |
+
+🟢 **The claim this licenses:** *on 47 cities and 636 stations, 64-dimensional EO foundation-model
+embeddings do not beat the best single globally available raster by more than 0.130 in rank
+correlation.* **The previous embedding null could resolve 0.65; this one resolves 0.130** — a
+five-fold tightening of the same question, and it converts an underpowered null into a bounded one
+exactly as Phase 2 did for the learned pattern. **The seventh null, and the second with a detection
+limit fixed in advance.**
+
+### 🔴 GOTCHA #91 FOR THE THIRD TIME, and it would have been the headline
+Unpaired, **embeddings post the highest median of anything tested, 0.327 against the benchmark's
+0.301** — they appear to beat the best free raster and to beat the entire 60-predictor set. **Paired
+within city the same comparison is −0.028, winning 21 of 47.** Opposite signs again. Had the median
+table been reported as the result, this would have been written up as *foundation-model embeddings
+break the spatial ceiling*. Third occurrence after F.102's temperate band (+12.91 vs +0.14) and
+F.103's siting experiment (+0.114 vs −0.044).
+
+### ⚠ E3 is marginal, not zero, and that is the honest reading
+The partial correlation is **+0.191 with a lower bound of −0.007** — it fails by seven thousandths.
+It is also **roughly three times F.27's point estimate of +0.066**, measured with far more power. The
+registered verdict is *undetectable* and that stands, but *"embeddings carry no independent signal"*
+would be a stronger statement than the data support. **This is the quantity a follow-up should
+target**, and the obvious design is more cities rather than more bands.
+
+### What did not need checking
+The registration made a PASS provisional on auditing AlphaEarth's training corpus for ground-monitor
+ingestion (the C1/F.95 lesson). **A failure needs no such check**, because contamination could only
+have inflated the score. The audit is therefore not required and was not done.
+
+### Context that makes the null unsurprising rather than disappointing
+Published prior art closest to this test ([Quito, *Remote Sensing* 17:3472,
+2025](https://www.mdpi.com/2072-4292/17/20/3472)) reports R² ≈ 0.71 for NO₂ and SO₂ from these same
+embeddings but only *moderate* accuracy for **PM2.5** — the pollutant here. NO₂ is a sharp local
+traffic tracer; PM2.5 is regionally dominated and partly secondary. And F.68/F.69 establish that
+Kandy's within-city signal decays over tens to hundreds of metres, so the pattern is **sub-grid by
+construction** and no annual surface covariate can place it. ⚠ A null still does **not** establish
+that sub-kilometre PM2.5 is unpredictable; it bounds what this information recovered on this frame.
+
+Claims: `emb.*` (14).
+
+### F.111b — a cheap screen that rules out the next obvious covariate before anyone builds it
+
+Two gaps surfaced while investigating what else GEE could supply, both admissible at `Bud0`.
+
+**🔴 The 60 LUR predictors contain no chemical tracer.** Every one is a land-surface proxy: NDVI,
+tree, water, population, built-up, night lights, land cover, roads, distance-to-road. A satellite
+NO₂ column would be a direct observation of co-emitted combustion, and the Quito study found NO₂
+far more predictable from these same embeddings (R² ≈ 0.71) than PM2.5. It is the most obvious
+remaining candidate.
+
+**It was screened in one probe rather than tested in a full experiment.** For a covariate to place
+within-city structure it must first *vary* within a city. Median within-city coefficient of
+variation, 8 cities and 90 stations, TROPOMI NO₂ 2023 annual mean:
+
+| quantity | median within-city CV |
+|---|---:|
+| TROPOMI NO₂ column | **0.198** |
+| the benchmark raster (built-up, 2.4 km) | **0.445** |
+| the target itself (observed PM2.5) | 0.214 |
+
+**NO₂ carries 0.45× the within-city contrast of the benchmark that already fails to clear the
+bar**, which is what a 3.5 × 5.5 km pixel predicts against a 1 km target. ⚠ Its CV happens to sit
+near the target's own (0.198 against 0.214), and that is a coincidence of scale, not evidence:
+matching variance is not matching pattern. **Recorded as a screen, not a null** — no bar was
+registered and none was tested. NO₂ as a *daily city-level driver* on the temporal axis is a
+different question and remains untested.
+
+**🔴 The ladder's driver set contains no precipitation and no humidity.** `FEATS` is temperature,
+u/v wind, wind speed, boundary-layer height and two day-of-year terms, so **wet removal is entirely
+absent from the model's meteorology**. Table 9.1 already carries this as `NO MEASUREMENT: a known
+structural gap`. ERA5-Land daily precipitation is global, free, and returned values at 29 of 30
+probe stations (⚠ de-accumulate, gotcha #60).
+
+⚠ **This is not a cheap change despite being a cheap pull.** Precipitation enters `Bud0a`, the
+bottom rung, and **F.84 is the record of what happens when the bottom rung moves: every gain above
+it changes.** Adding it means re-running and re-registering the ladder, not appending a column.
+
+
+## F.112 — 🟢 NO F.84 REPEAT: the unused driver was unused harmlessly, and a fourth medians trap
+
+`scripts/precip_ladder_test.py` → `precip_ladder.{csv,json}`.
+**Registered at OSF [`z89kt`](https://osf.io/z89kt/)** (project `x7a8j`), lodged before the script
+was written. Prereg `docs/prereg_precipitation_ladder_2026-09-09.md`.
+
+### What was actually being tested
+Not a data gap. **`total_precipitation_sum` was already in the scored frame** — pulled, merged, and
+never referenced, because it is absent from `FEATS`. So `Bud0a` held a driver its budget admits,
+in its own inputs, unused. **That is the F.84 defect class**, which moved the headline from 25.6%
+to 17.9%. `require_covers()` cannot catch it: it asserts coverage at *stream* level and cannot see
+an unused variable inside an admitted stream.
+
+### 🟢 The result — P1 and P2 both REFUTED, which is the good outcome
+
+Both arms fitted on **one fixed city set**, identical seed, station roles and machinery; the only
+difference is one feature.
+
+| registered prediction | result | verdict |
+|---|---|---|
+| **P1** the bottom rung improves | **−0.129%** [−4.561, +5.780] | **REFUTED** |
+| **P2** the gains above it shrink | paired **+0.000** [−4.88, +1.61] | **REFUTED** |
+| **P3** the redundancy null survives | 0.37 → 0.69, paired **+0.000** [−0.01, +0.23] | **HOLDS** |
+| **P4** the background stays largest | 28.53 → 32.12 | **HOLDS** |
+| **P5** deep-tropical ordering does not reverse | +19.84 → **+9.20** pp, both exclude zero | **HOLDS in direction** |
+
+**There is no F.84 repeat.** An 11 km reanalysis daily rainfall total does not improve daily
+city-mean prediction on this panel, so the variable was unused *harmlessly* and no published gain
+is overstated because of it. **This closes the `NO MEASUREMENT` row Table 9.1 carries for
+precipitation** — it is now a measured null rather than an unexamined gap.
+⚠ It is **not** evidence that wet removal does not matter. It is evidence that this product, at
+this resolution, on this loss, does not help.
+⚠ **P5 holds in direction but its magnitude halves**, +19.84 → +9.20 pp. Both intervals exclude
+zero, so the recommendation survives, but the deep-tropical margin is sensitive to the driver set
+as well as to the satellite stream (F.97) and the loss (F.109).
+
+### 🔴 GOTCHA #91 FOR THE FOURTH TIME — and this is the most instructive instance yet
+Unpaired, the first-two-sensors gain reads **35.05% without precipitation against 27.42% with**, a
+7.6-point drop that is exactly the shrinkage **P2 predicted**. Paired within city it is
+**+0.000 [−4.88, +1.61]**. **The unpaired comparison would have CONFIRMED a registered prediction
+that the paired comparison refutes.** Every previous instance (F.102, F.103, F.111) produced a
+flattering number; this one produced a *confirming* number, which is harder to resist. Registering
+the analysis is what made it visible.
+
+### ⚠ These numbers are NOT the published ladder, and must not be quoted as it
+The coverage gate keeps **37 of 48 cities**, 35 of which score in both arms. On that subset the
+first rung reads **35.05%** against the published **17.9%** on 48 cities. That gap is the city
+subset, not precipitation. **The two arms are comparable to each other and neither is comparable to
+the headline.**
+
+### ⚠ A hypothesis about the exclusion, tested and refuted
+ERA5-Land has no data over water (a recorded trap), so the obvious expectation was that the
+low-coverage cities would be coastal. **They are the opposite.** Excluded cities are **18% coastal
+against 51%** for those kept, with a median coast distance of **187 km against 46 km**. The gap is
+inland, not maritime, and its cause is unidentified. Recorded because the plausible explanation was
+checked rather than assumed.
+
+Claims: `precip.*` (16).
+
+⚠ **CORRECTED BY F.113 (2026-09-23).** Every number in this entry was fitted with city 3147 carrying
+NaN geography. The corrected values, and a different reading of **P4**, are in F.113. This entry
+is kept unchanged as the record of what was reported.
+
+---
+
+## F.113 — 🔴 a C7 defect in three ladder scripts, and a pooled headline that does not survive pairing
+
+**Found 2026-09-21** by the pandera structural guard (`src/modular/schemas.py`). **Fixed and
+re-scored 2026-09-23** (`restrict_to_stream_complete`, commit `ccef683`). Old outputs:
+`data/processed/modular/_backup_pre_c7fix_2026-09-23/`.
+
+### The defect
+City **3147** (South Africa, subtropical, 518 city-days) is in the ladder pool but absent from
+`bud0_static_geo.csv`. A left merge gave it **NaN for all 60 geography features**, and gradient
+boosting fitted it without a warning. The C7 guard (`require_covers_units`) had only been wired into
+`c1_satellite_stream_ladder.py`; three later scripts never received it:
+`ladder_order_and_bootstrap.py` (F.97), `loss_sensitivity.py` (F.109), `precip_ladder_test.py`
+(F.112). `ladder_maiac.py` (**F.96**) already filtered to geography cities and is **unaffected**.
+3147 was never itself scored in F.112; it entered as **training data for every other city**. The
+effect was not small.
+
+### What moved (58 claims regenerated; `build_claims.py --check` reproduces all 566)
+| result | before | after | consequence |
+|---|---|---|---|
+| **F.109** deep-tropical RMSE inversion | +33.7 [−2.3, 53.4] | **+33.3 [7.0, 50.1]** | Now reproduces F.96/F.97c. **F.109's "fragility" reading (the interval spans zero because of resampling detail on 13 cities) is WITHDRAWN: the gap was this defect.** |
+| F.109 exceedance inversion | −7.57 [−32.1, −2.68] | **−15.9 [−38.1, −1.54]** | Excludes zero on both. The sign-flip stands, and is larger. |
+| F.109 background gain, rmse / mae / tail / exceedance | 33.1 / 34.1 / 39.5 / 33.4 | **37.1 / 38.0 / 38.4 / 28.0** | Tail is still the largest, now by 0.4 points over mae. |
+| **F.97** stations 3–6, without / with background | 0.13 / 2.81 % | **0.23 / 2.97 %** | Order-robust in conclusion. "More than twenty times" becomes **about thirteen times**. |
+| F.97 background after 2 / 8 stations | 38.03 / 40.56 % | **37.61 / 38.44 %** | Still order-robust. |
+| **F.112** P1 bottom rung | −0.13 % | **−1.04 % [−5.5, +4.3]** | Still REFUTED. |
+| F.112 P2 first two sensors, paired | +0.000 | **−0.30 [−2.1, +3.2]** | Still REFUTED. |
+| F.112 P5 deep tropics without / with | +19.8 / +9.2 | **+16.4 / +8.6** | Still halves; the with-precipitation interval now spans zero [−3.8, +34.6]. |
+Unaffected: F.96, the city bootstrap (`ladder_bootstrap.csv` reads published outputs), F.97c's
+paired inversion.
+
+### 🔴 F.112 P4 was never supported when paired, even before the fix
+F.112 recorded **P4 "the background stays largest": HOLDS** from the medians 32.12 vs 27.42. That
+is a difference of medians. **Paired within city** (background gain minus first-two gain, median,
+4,000-draw bootstrap over cities) on the same 35 cities:
+**old −0.99 [−9.2, +13.8], 17/35 · new +0.02 [−8.6, +7.2], 18/35.** The two gains are
+**indistinguishable** on this subset. **P4 is NOT SUPPORTED.** Gotcha #91, fifth instance. The
+F.112 "most instructive instance" (unpaired 35.05 vs 27.42 would have confirmed P2) **disappears on
+corrected data**: 31.7 vs 31.9.
+
+### 🔴 EXPLORATORY, post hoc: the pooled "background is the largest gain" fails pairing on MAIAC
+Not registered. Computed 2026-09-23 because F.112's P4 raised the question for the full panel.
+Paired within city, background gain minus first-two gain, `Bud0c` bottom rung:
+
+| stream | unpaired medians (bg vs first two) | **paired** | background larger |
+|---|---|---|---:|
+| GHAP (fused, retired by F.95) | 40.6 vs 17.8 | **+14.6 [+3.1, +27.2]** | 32/46 |
+| **MAIAC (raw, the admitted stream)** | 37.1 vs 23.6 | **+2.3 [−10.9, +21.4]** | 24/46 |
+| MAIAC, deep tropics | 10.3 vs 43.7 | **−33.3 [−50.1, −7.0]** | 3/13 |
+
+**On the stream the project uses, "a background series is the largest single gain" across the pooled
+panel is a composition effect, not a within-city result.** It holds only on the retired fused stream.
+**What survives pairing is band-specific:** in the deep tropics local sensors beat the background
+(the F.96/F.97c number, itself post hoc per F.97c). Neither the pooled pairing test nor the band
+inversion is covered by an OSF registration (`bkpyr` registers C1/S3, S1, S2, R2, R3 only).
+
+### Lessons
+- A structural guard found what four review rounds and every claims gate missed: **the claims gate
+  checks that a number is current, not that the frame behind it is whole.**
+- **Wire a guard into every script that builds the frame, not the first one.** C7 was "fixed in
+  code" for three weeks while three scripts kept the defect.
+- **Every A-versus-B comparison of rung gains must be paired.** This includes comparisons of two
+  steps in the same ladder, not only comparisons of two arms.
+
+Claims: `loss.*`, `order.*`, `precip.*` (58 regenerated). Pairing numbers above are computed, not
+yet tokenised.
+
+---
+
+## F.114 — 🔬 the remaining unpaired headline comparisons, paired: one survives, one sharpens, two fall
+
+**EXPLORATORY, post hoc, 2026-09-25**, prompted by the Paper 1 scope audit
+(`docs/paper/paper1_scope_audit_2026-09-25.md`). Every row is the median of within-city
+differences, 4,000-draw bootstrap over cities (seed 20260925), from files already on disk
+(`ladder_maiac.csv`, `loss_sensitivity.csv`, `ladder_order_variants.csv`; MAIAC stream, city 3147
+excluded). Not cluster-bootstrapped; F.104 says pooled intervals widen 1.45–1.97× under clustering.
+
+| comparison | unpaired medians | **paired** | cities > 0 | verdict |
+|---|---|---|---:|---|
+| geography step minus satellite step (bottom rung) | 10.07 vs 5.97 | **+3.46 [−2.10, +15.15]** | 28/47 | **"geography beats satellite" NOT SUPPORTED** |
+| background minus first two, RMSE | 37.1 vs 24.6 | **+2.25 [−9.19, +21.36]** | 24/46 | tie (= F.113) |
+| background minus first two, MAE | 38.0 vs 22.8 | **+4.26 [−8.67, +26.75]** | 26/46 | tie |
+| background minus first two, **tail** (top-decile days) | 38.4 vs 8.6 | **+32.15 [+14.29, +43.76]** | 34/46 | **background wins, robustly** |
+| background minus first two, **exceedance** | 28.0 vs 0.0 | **+28.21 [+14.96, +53.23]** | 32/39 | **background wins, robustly** |
+| stations 3–8 with a background present minus without | 2.97 vs 0.23 | **+1.07 [+0.12, +5.59]** | 31/46 | real but ~1 pp; the "13×" ratio overstates it |
+| background after 8 stations minus after 2 | 38.44 vs 37.61 | **+0.65 [+0.14, +3.30]** | 32/46 | order-robust within ~1 pp |
+
+### What this changes
+- **The loss-dependent ordering is now a PANEL result, not only a band result.** On average-day
+  losses a background series and two local sensors are indistinguishable across the panel; on
+  episode losses the background wins in about three cities of every four, and the interval
+  excludes zero. Combined with F.97c (deep tropics, local wins on RMSE) and F.109 (deep tropics,
+  background wins on exceedance), the paired picture is: **what an observation is worth depends
+  on the loss first and the climate band second.**
+- **"Static geography beats the satellite level" is withdrawn as a finding.** It compared two
+  medians from different runs.
+- The ordering effect on stations 3–8 is real and small; quote it as about one percentage point,
+  never as a ratio.
+
+### Cluster bootstrap (added 2026-09-25, F.104 method)
+Two-level resample (network × country clusters, then cities), 4,000 draws, `cluster_bootstrap.py`
+functions reused. Background minus first two: **tail +32.15, cluster [+2.26, +43.81]; exceedance
++28.21, cluster [+6.20, +53.24]**, both still excluding zero (28 and 24 clusters). RMSE cluster
+[−26.8, +31.6] and MAE [−26.8, +29.3] remain ties. Stations 3–8 ordering effect: cluster
+[+0.00, +5.95], borderline. Geography minus satellite: cluster [−3.90, +38.83], still a tie.
+**Quote the episode result as robust in direction and uncertain in size** (lower bounds +2 to +6).
+
+Not yet tokenised as claims.
+
+## F.115 — 🔴 the verification pass: labels, frames, four unpaired verdicts, a miscounted registry, and a headline that was one lucky split
+
+**2026-09-25. Re-run of every ladder analysis after a code audit** (user: "make sure nothing is shaky, faulty
+or inaccurate"). Plan and full log: `kandy_pm25/docs/verification_rerun_plan_2026-09-25.md`; outputs and
+old-vs-new logs in `data/processed/modular/verify_2026-09-25/`; old outputs in
+`modular/_backup_pre_verify_2026-09-25/`.
+
+### Defects found and fixed (code)
+| defect | effect | fix |
+|---|---|---|
+| **CNEMC cities unbanded and classed LCS** in every ladder output (band/class merged from the OpenAQ-only manifest; `NaN >= 0.5` is False) | band results covered OpenAQ only; class split read 20 ref / 27 LCS instead of 31 / 16. Deep-tropical results unaffected (no CNEMC city is deep-tropical) | `src/modular/city_meta.py` (`attach_meta`, refuses a missing band) |
+| **city 3147 still in `revalidate_ladder.py` and `station_count_curve.py`**; `colombo_zeroshot_bud0c.py` and `learner_sensitivity_bud0c.py` also dropped the censored city 2168 | GHAP pooled first-two 17.85 → **14.95 %**, background 40.56 → **38.44 %** | ONE shared frame builder, `scripts/ladder_frames.py` (verified identical to the MAIAC frame, 30,303 × 77) |
+| silent `except Exception: continue` in every scoring loop | cities dropped without a name (1677: no outer ring; 143: < 30 overlap days at k = 1) | `src/modular/runlog.py` (`DropLog`) |
+| **four unpaired verdicts** (gotcha #91): independent-background "73 %" (ratio of medians), the loss script's "background largest", z89kt P4, and the order test's "more than twenty times" | see below | paired within city everywhere |
+| precip script printed P3/P4 but never computed a verdict | verdicts had been typed | computed in code; P3 "not adjudicable" (no bound registered) |
+| "stations 3–8" labels (b2 = pool[:6]) | cosmetic but wrong | relabelled from the slice |
+
+### Corrected numbers (MAIAC unless stated)
+- **Order test (F.97):** background after stations 3–6 37.07 %, before 33.12 %; stations 3–6 0.12 % / 2.07 %
+  (~17×; GHAP ~13×). "More than twenty times" retired.
+- **Station count (F.102):** one station **23.4 % [8.96, 38.88]** (n 46); a second adds **+0.09 [−0.01, +0.35]**
+  paired. (CONTEXT's "17.02 [4.57, …]" was the old GHAP value, not a typo.)
+- **Independent background (F.54 re-run), paired:** per-city recovery **71 % [44, 82]** (n 19; GHAP 73 % [56, 84]),
+  paired −13.8 pp [−20.6, −7.8]; 83 % at ~62 km, 45 % at ~152 km. 20/47 cities have a donor; 4 deep-tropical.
+- **Cluster bootstrap (F.104):** 47 cities in **28** clusters (not 29); widening **1.15–2.21×** (not 1.45–1.97).
+- **Precipitation (z89kt), verdicts computed:** P1 refuted, P2 refuted, **P3 not adjudicable**, **P4 refuted**
+  (+0.02 [−12.63, +7.15]), P5 held in direction ⇒ **1 held / 3 refuted / 1 not adjudicable** (was 3 / 2).
+- **Colombo (g6hqb priors), corrected frame:** bias +1.4 % (held), R² vs climatology −0.634 (refuted).
+- **Learners (F.88):** background gain 36.8–39.8 % and the stations 3–6 null are robust across HGB, shallow HGB,
+  RF and Ridge; the first-two gain is not (22.5–41.3 %: it tracks the weakness of the baseline).
+- **Detection limits:** each spatial test now has its own (same simulation): 2jyfg 0.130; 6udm3 E1 **0.180**,
+  E2 **0.080**; F.105 families 0.09–0.16. Learned pattern paired **+0.022 [−0.062, +0.050]**, 25/46. Every null stands.
+- **D-7 count:** 23 of 47 merged pairs non-concurrent (the lodged 4whsc text says 22).
+
+### Registry (C4)
+`#writing/registrations.json` rewritten after an audit of every registration document against this ledger:
+seven run registrations hold **48 predictions — 26 held, 17 refuted, 5 not tested / not adjudicable** (was
+38 / 25 / 13: bkpyr's C1 and R3 and two g6hqb priors were missing, and nxqgb counted gates, not priors).
+Twelve registrations lodged, including amendment 3 (79qkw, pending). **"11 registrations, 13 of 38 refuted" is retired.**
+
+### The headline was one split
+The deep-tropical inversion (F.96, F.97c: −33.3 [−50.1, −7.0]) was measured on ONE station split and ONE learner
+seed. Over 20 other splits its median is −22.6 (range −36.4 … −4.6) and its interval excludes zero in 3/20;
+the learner seed alone moves the first-two gain 11.2–23.0 %. Split-averaged (21) and learner-bagged (5), the
+inversion is −28.7 [−36.3, −7.7] (cluster) — but under the 18 h completeness rule two cities lose the background
+rung and it becomes −25.0 [−36.2, +8.3]. Its fate under the full redesign is F.116.
+**Retired:** "4.2× local advantage", "robust" for the inversion, "background is the largest single gain" (pooled).
+
+## F.116 — 🔬 ladder v2: a deployable estimator, a discovery/confirmation split, and the deep-tropical inversion demoted to exploratory
+
+**2026-09-25 → 27. EXPLORATORY (discovery panel).** User directive: *"if our methods and tests don't seem
+robust or scientific enough, redesign and redo them."* Plan and full log:
+`kandy_pm25/docs/redesign_ladder_v2_plan_2026-09-25.md`. Code frozen at commit `ba0da66` (per-file SHA-256
+in `docs/ladder_v2_freeze_manifest.json`). Registration draft (NOT lodged, awaiting the user):
+`docs/prereg_ladder_v2_confirmation_DRAFT_2026-09-26.md`.
+
+### Why a redesign, not more fixes
+After F.115 every result on the 47 cities was post hoc, and the estimate was one draw: one station split and
+one learner seed each moved the headline (first-two gain 11–26 %), the shrinkage weight was chosen against the
+scoring stations, static geography was averaged over sites a third of which were the scoring stations, and
+there was no daily completeness rule.
+
+### Ladder v2 (E1–E10)
+Per-city effect = median over **21 station splits**; sensorless rung = median over **5 learner seeds**;
+shrinkage weight **cross-fitted from the other cities**; static geography from **40 random points in the
+GHSL urban centre** (GHS_SMOD_V2-0 class 30; 56 of 57 cities, one suburban fallback); station-day valid with
+**≥ 18 h** (EPA 40 CFR 50 App. N), equal weight per station; **every city's drivers from one function** after
+fixing its chunking; reconstruction and prospective arms reported separately; cluster bootstrap primary.
+**Parity:** at v1 settings v2 reproduces the stored v1 ladder to 1e-9 (47 cities, all rungs).
+
+### Two defects found while building it
+- **`pull_city` never requested the head or tail of any window** (its quarterly chunks began at the first
+  quarter start after the window opened). Every discovery city lost those days silently; the earlier stated
+  cause ("ERA5 not yet published") was wrong for most of them. Fixed; all cities re-pulled; the frame gains
+  **1,575 city-days (+5 %)**.
+- The discovery CNEMC drivers came from a different pull than every other city's (r 0.96–0.998 with it);
+  now one function for all.
+- Monitor sites are ~**50 % denser** in population and buildings than the urban centre they sit in, and their
+  near-point road features do not rank cities the way random points do (ρ ≈ 0): site-based geography
+  describes the monitored neighbourhoods, not the city.
+
+### Discovery results (MAIAC, reconstruction, median [two-level cluster 95 %])
+| effect | v2 |
+|---|---|
+| first two stations | **+21.8 % [10.5, 52.9]** |
+| stations 3–6 | **+0.54 [0.21, 0.80]** |
+| same-network background | **+34.4 % [15.4, 62.2]** |
+| background − first two (pooled, paired) | +4.8 [−23.6, +52.1] |
+| latitude slope of that difference (joint with reference fraction) | +1.09 /° [−0.69, +3.35] |
+| deep tropics, background − first two | **−27.4 [−47.8, +11.8]** (n 12) |
+Prospective arm: first two +12.5 %, background +38.4 %, deep tropics −4.1 [−56.1, +1.3]. GHAP: first two
++15.1, background +38.9, pooled difference +13.9 [−3.7, +55.7], deep tropics +2.2.
+
+### Verdicts
+- **Robust across every variant tried:** the first stations help; stations 3–6 add less than a point; a
+  same-network background helps.
+- **Not robust:** any pooled ordering of background vs first stations; any latitude moderation; the size of
+  the first-station gain (22–41 % across learners, 11–26 % across seeds and splits).
+- **The deep-tropical inversion (F.92/F.96/F.97c) is DEMOTED to exploratory.** Local stations lead in direction
+  under every variant, but under v2 the interval crosses zero, the completeness rule removes two cities' outer
+  rings, and the sign reverses prospectively. **It cannot be confirmed with public data**: the fresh pool holds
+  4 tropical cities.
+- The Kandy recommendation "local stations first, 4.2×" is withdrawn; CEA local stations and an NBRO background
+  are complementary, not ranked.
+
+### Confirmation (designed, not run)
+76 fresh cities in 30 countries (cap 4 per country, user decision 2026-09-26), selected from metadata only;
+63/76 reference-dominated, 4 tropical. Endpoints H1 (first stations > 0), H2 (stations 3–6 inside ±1, bound
+fixed before the final discovery run), H3 (background > 0), H4 (ordering, two-sided), M1 (latitude slope > 0,
+declared underpowered). The scorer refuses to touch confirmation PM2.5 until the registration is lodged.
+
+### F.116 addendum (2026-09-27) — order and station count on v2; H5 registered
+`ladder_v2_secondary.py`, parity with the production v2 ladder exact on 949 city-splits (an assert in
+the script caught two implementation differences before any number was used). **Order:** background
++34.4 [15.4, 62.2] after stations 3–6, +31.8 [13.4, 61.5] before; stations 3–6 +0.54 [0.21, 0.80] without
+a background, +2.39 [1.49, 3.44] with; same endpoint. Order-robust. **Station count:** one station +14.5 %
+[8.4, 51.8]; **a second adds +0.93 [0.37, 1.50] points paired** (v1: +0.09); 3–8 stations +1.2 to +1.4 over
+one, then flat. **F.102's "saturation at ONE station" is revised**: v1's in-sample shrinkage could zero a
+noisy extra station; with cross-fitted weights the second station is worth about a point. **Secondary
+losses (v2):** background − first two is a tie on RMSE but +27.5 [2.7, 55.0] on the tail and +34.5
+[11.0, 65.9] on exceedance (prospective +33.3 / +43.2); registered as confirmatory **H5** (user, 2026-09-27).
+
+## F.117 — 🟢 ladder v2 CONFIRMED on 72 fresh cities: first stations help (less than discovery said), a same-network background helps more, latitude undetectable
+
+**Registered:** OSF `ueyfr` (project `dm9zf`), 2026-09-28 04:24:22 UTC, before any OpenAQ PM2.5 of the
+76 confirmation cities was downloaded (CNEMC on disk, disclosed). Frozen code `e6b744b`, 27 files
+re-hashed identical before the single scoring run. Deviation E-1 (execution only: parallel ingest;
+a restarted sequential ingest duplicated 5 cities with identical counts) logged before scoring.
+Ingest audit: 0.00 % silent file loss in all 64 OpenAQ cities. 72 scored; 4 excluded by rule.
+
+| id | confirmation (reconstruction, RMSE, cluster 95 %) | verdict |
+|---|---|---|
+| H1 first two | +8.53 [3.07, 25.12] | supported — **less than half discovery's +21.8** |
+| H2 stations 3–6 | +0.22 [0.12, 0.50] | supported (inside ±1) |
+| H3 background | +41.10 [26.77, 62.84] | supported |
+| H4 background − first two | +24.58 [4.07, 47.80] | **ordering found: background > first two** (undetermined on discovery) |
+| M1 \|lat\| slope | +0.53 [−1.79, +1.49] | not supported — undetectable, as stated in advance |
+| H5 the same, exceedance | +59.33 [33.93, 67.73] | supported |
+
+Prospective arm reproduces every verdict. Secondary: the first two stations add nothing detectable on high
+days (tail −2.66 [−10.31, +3.74]) or for exceedances; the background dominates both. Exploratory, after
+scoring: without CNEMC (one cluster, 12 cities) H4 is +11.46 [1.35, 33.33], so the ordering does not rest on
+the Chinese network; CNEMC alone +63.9.
+
+**Consequences.** (1) The "first two stations ≈ +22 %" headline is retired; quote **+8.5 % [3.1, 25.1]**.
+(2) "No pooled ordering" (F.116) is superseded for this population: a same-network background outranks
+the first two local stations on every loss. (3) Nothing is confirmed about latitude or the deep tropics;
+the discovery inversion (−27.4, n 12) stays exploratory. (4) Scope: 50/72 temperate, 63/76 reference;
+the background is a same-network series, which an independent network recovers only ~71 % of.
+Record: `kandy_pm25/docs/confirmation_results_2026-09-28.md`.
+
+### F.117 addendum (2026-09-28) — the GHAP "deflation" claim does not survive v2 pairing
+EXPLORATORY. Paired within city on the discovery panel, v2 estimator, MAIAC − GHAP, two-level cluster
+bootstrap (4,000 draws): first two stations **+2.28 [−0.59, +16.85]** (MAIAC higher in 65 % of 46 cities);
+background **−1.52 [−3.84, −0.46]**; background − first two **−5.53 [−16.84, −1.45]** (27 % > 0, n 45).
+**F.96's "a monitor-trained product deflates the rung above; GHAP understated a local station by about
+half" is retired** as a paired result: the first-station difference crosses zero. What survives: a
+monitor-trained covariate **tilts the ordering toward the background**. Paper 1 contribution 3 and §3.4.2
+rewritten to match.
+
+### F.117 addendum 2 (2026-09-28) — OSF registry verified; amendment 3 re-lodged; two dates corrected
+All 13 registration ids resolve on OSF; none withdrawn. **Amendment 3 (D-8)**: the 2026-09-23 submission
+never became a registration (draft left as draft; found 2026-09-28). Registered from the same project and
+draft as **`4qs9c`** (2026-09-28 08:43:26 UTC, pending approval) with a dated §5 that discloses wave 1, the
+void tabpfn-9.0.0 run and the 80-task cross-machine check, and corrects "reproducible on any machine" to
+"deterministic within one environment". **Dates:** `6udm3` (embeddings, F.111) and `z89kt` (precipitation,
+F.112) were registered **2026-09-07 23:04 / 23:39 UTC**, not 2026-09-09 as recorded from their filenames;
+6udm3 precedes the first commit of `embedding_spatial_test.py` by ~8 minutes.
+
+## F.118 — 🟢 the confirmed ladder survives a much richer sensorless baseline (OSF `b379r`)
+
+Registered 2026-09-28 12:34 UTC before any rich-stream result; frozen `831df9a`; parity with `ueyfr`
+2.8e-14; no city excluded. Adding CAMS NRT PM2.5, Copernicus terrain (ocean-masked), FIRMS fires, TROPOMI
+NO2, IMERG precipitation and day of week (13 features) improves Bud0 by **+13.1 % [9.2, 16.2]** on the 72
+confirmation cities. Under it: first two **+8.9 [3.6, 15.3]**, stations 3–6 **+0.24**, background
+**+35.6**, background − first two **+21.7 [3.8, 40.7]**, exceedances **+45.4 [27.9, 58.3]**. 6 of 7
+predictions as registered; **R3 refuted**: the first-station gain did not shrink (paired −0.7 [−7.1, +1.7]).
+**Consequence:** the ladder's verdicts are not an artefact of a weak baseline; "the gains are inflated by an
+under-informed Bud0" is answered for these streams. Record: `docs/rich_baseline_results_2026-09-28.md`.
+
+## F.119 — 🔬 the spatial learning curve, scored: cities split, deep prior flat, siting irrelevant, reach ~1 km
+
+OSF `rqn4y` + `26hp8` + `4whsc` + `4qs9c`; scored once 2026-09-28 after the preflight (E8/E9 CPU-only,
+consolidated from 7 kernels, all finite). Primary frame 18 cities / 7 countries, detection limit 0.28.
+**Held:** X2 (kriging/RK beats the free raster by k ≤ 35 in 11/18 cities), X3 (ridge LUR saturates at k = 3,
+within δ of the raster), X4 (no curve beyond the within-cell ceiling), X5 (cLHS vs random: nothing
+resolvable; the coded 0.00 is a tie artefact, station-using estimators within ±0.012), X7 (reach 1.0 km),
+X9 (no deep estimator beats regression kriging by > δ; E10 +0.065 at most), X11 for E10. **Refuted:** X1
+(IDW does not rise monotonically), X6 (per-day curves not below static for E3, E4, E9), X10 (TabPFN with
+coordinates is worse than without at k = 12: −0.052 [−0.103, −0.018]). **Not testable:** X12 (E11 failed its
+control). Cities split: 5 cross at 3 stations, 7 never cross. **No station count for a Kandy map follows**
+(1 tropical city in the frame). Record `docs/spatial_curve_results_2026-09-28.md`.
+
+## F.120 — 🟢 the confirmed verdicts do not depend on the learner; deep learning does not beat trees here
+
+OSF `jea58`, scored once 2026-09-29; parity with `ueyfr` 2.8e-14. With the Bud0c learner replaced by
+TabPFN 8.5.0 (L1), a 14-day GRU (L2) or HGB plus four ventilation-physics features (L3): **all 12 directional
+verdicts held** (H1, H2, H3, H5 under each). Bud0 skill vs HGB: TabPFN **−11.1 % [−50.9, −1.1]** (worse), GRU
+**+1.8 [−4.3, +8.9]**, physics **+2.0 [−0.3, +4.6]** (no detectable change). H4 ordering (background > first two)
+holds under L2 (+25.7 [9.3, 49.3]) and L3 (+25.0 [3.1, 48.3]) but not under L1 (+8.3 [−5.4, +40.6]), where the
+weaker baseline makes the first two stations worth +18.6 %. **Consequence:** the ordinary-day ordering depends
+on the quality of the sensorless estimate; the exceedance ordering and every directional verdict do not.
+Record `docs/learner_robustness_results_2026-09-29.md`.
+
+## F.121 — 🔴 design audit: the station cap and the record window shaped two results (2026-10-04)
+
+(A1) The OpenAQ ingest took at most **12 stations and the last 2 calendar years per city**. The cap binds in
+45/63 confirmation and all discovery OpenAQ cities and leaves **1–2 stations for the background rung** that
+carries H3/H4/H5. (A2) The spatial curve drew **one year per site**; 21/62 candidate clusters lost more than half
+their sites at the window step (Bangkok 86 → 11; Colombia, Mexico, India, Vietnam, two Brazilian clusters lost
+entirely or nearly), leaving one tropical city in the frame. **Registered results stand as registered;** both
+were re-tested under new registrations with full networks and full records (test A, OSF `mhgna`, F.122; test B,
+OSF `fu59b`, F.123). Smaller items B1–B5 (precipitation stream coverage, the Premasiri pixel test, BLH from four
+hours, the D-2 table entry, a census row limit) are tracked as exploratory follow-ups.
+
+## F.122 — 🟢 the confirmed ladder does not depend on the station cap (test A, 2026-10-05)
+
+OSF `mhgna`, scored once 2026-10-05; parity gate 72/72 vs `ueyfr` (2.8e-14) before lodging. Every OpenAQ city
+re-entered with up to 40 locations over its full driver window (median 17 used per confirmation city, cap 12);
+75 confirmation cities scored (72 under the cap), 72 with a background rung (68). **All registered verdicts
+hold:** N1 first two +7.68 [3.24, 19.95]; N2 stations 3–6 +0.46 [0.26, 0.73]; N3 background +46.02 [34.26,
+63.16]; N4 background − first two **+32.01 [11.59, 50.45]**, ordering found; N5 exceedance +63.38 [33.54,
+71.83]. N6 (paired change vs `ueyfr`): H3 +0.54 and H5 −0.22 include 0; **H4 +2.39 [0.57, 8.91] excludes 0**,
+but against the old cap re-applied to the same records it includes 0 (+3.18 [−0.40, +9.54]). The re-applied
+cap reproduces `ueyfr` closely, not exactly: 1,313 in-window hourly rows of archive back-fill in 7 cities refit
+the pooled sensorless rung. **Consequence:** the background verdicts were not an artefact of a one- or
+two-station background; the background's advantage is, if anything, larger with full networks. Record
+`docs/full_network_ladder_results_2026-10-05.md`.
+
+## F.123 — 🔬 the spatial curve on full records: tropical cities qualify and look like temperate ones (test B, 2026-10-05)
+
+OSF `fu59b`, scored once 2026-10-05 (E0–E7; deep arms not re-run). **F1:** with each site's full record the frame
+grows to **23 primary cities** (960 sites, 9 countries; registered 18 / 745 / 7), including the first deep-tropical
+city (Bangkok, 65 sites); band arm 8 (6). **F2:** X1–X7 repeat the registered verdicts **except X4**, now refuted:
+in London and Bangkok the within-cell ceiling is negative (−0.28, −0.57) because sites sharing a 1 km cell
+disagree, while estimators still recover the city-scale ranking. X2 holds at 15/23 cities crossing the raster
+(8 at three stations; 8 never); reach 1.0 km; cLHS ≈ random. S-1: X2 not held (48 %). **F3 (exploratory):**
+8 tropical cities, detection limit 0.28: none above the temperate envelope; three partly or wholly below; station
+estimators beat the raster at k = 3 in all 7 scorable. **Consequence:** the earlier "no station count for Kandy
+follows" softens to "a handful of reference stations is the right order of magnitude, tropical cities included";
+no specific number. Deviation B-1 (E7 per frame). Record `docs/spatial_curve_full_record_results_2026-10-05.md`.
+
+### F.119 addendum (2026-10-05) — pre-scoring record of the registered curve, absorbed from CLAUDE.md
+Frame D3: 18 primary cities, 745 sites, 7 countries; S-1 frozen beside it. **D-6:** road covariates from 37 Geofabrik
+extracts (9.05 GB, MD5-verified, minimum-size cover by polygon containment) instead of live Overpass; cross-check on the two
+cities Overpass had finished: Spearman 1.000, zero difference. **D-7:** the leakage self-test, not the guard, was wrong
+(compared each instrument over its own days, skipped QC; 23 of 47 merged pairs are replaced instruments): corrected PASS 0.080
+(0.699 without twin). **E10 (ConvGNP)** passed its positive control on all three seeds (0.610 / 0.599 / 0.604 vs oracle 0.635);
+**E11 (TNP-D)** failed (−0.027 / −0.104 / −0.006), checked for a code defect first; its real-data results are not interpreted.
+**D-8:** E8/E9 scored on CPU only (GPU autocast matched CPU in 8/48 re-scores, median |Δρ| 0.073). Synthetic positive control
+PASS (E3 0.540 vs oracle 0.554 at k = 35).
+
+### F.123 addendum (2026-10-05) — X-T terrain moderator, exploratory, both frames
+`spatial_curve_moderators.py` (4 terrain descriptors × 4 curve outcomes, two-level bootstrap, permutation p): **0 of 16
+intervals exclude zero** in the registered frame (18 cities; min p 0.088, site range vs E3 advantage at k = 12, ρ −0.44) and
+**0 of 16** on full records (23 cities; min p 0.111, slope vs E3 skill at k = 12, ρ +0.38). Undetectable at ρ ≈ 0.5;
+terrain partly aliased with network (3 of 4 enclosed cities Korean). Outputs `spatial_curve{,_full}/analysis/moderators_terrain.csv`.
+
