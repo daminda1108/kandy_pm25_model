@@ -5,14 +5,15 @@
 ![Status](https://img.shields.io/badge/status-research-orange.svg)
 ![Reproducible](https://img.shields.io/badge/reproducible-inputs%20included-brightgreen.svg)
 
-Hourly PM2.5 at 1 km over the Kandy basin, Sri Lanka, with calibrated uncertainty and a
-population-exposure and health-burden layer.
+Hourly PM2.5 at 1 km over the Kandy basin, Sri Lanka, with a nominal 90 % interval (which
+under-covers: about 77 % at the two Kandy low-cost sensors) and a population-exposure layer.
+No attributable-death estimate is produced.
 
-**Kandy has no public air-quality monitor.** That is the problem this model exists to
-solve, and it shapes everything below: with nothing local to fit or to check against, the
-model is built from physically separable terms that depend only on globally available
-inputs, and is then validated by running it unchanged at ten cities that *do* have dense
-monitoring networks.
+**Kandy has one regulatory monitor and two low-cost sensors, and no monitoring network.**
+That is the problem this model exists to solve: the model is built from physically separable
+terms that depend on globally available inputs, validated by running it unchanged at ten
+cities that *do* have dense monitoring networks, and its annual level is calibrated to the
+Central Environmental Authority's Kandy station with a held-out check (below).
 
 **[Explore the output →](https://daminda1108.github.io/kandy-pm25-explorer/)**
 
@@ -29,7 +30,8 @@ monitoring networks.
 | **Diurnal cycle** | *r* = 0.60–0.98 in nine of ten |
 | **Level transfer** | −4% to +30% (median +7.6%) |
 | **Spatial rank** | significant against each city's own null in 6 of 9 estimable |
-| **Kandy 2023** | basin mean 21.0 µg/m³ · 427 attributable deaths/yr [235–625] |
+| **Kandy level** | basin annual means 13.6–16.8 µg/m³ (2019–2023), ≥ 2.4× the WHO guideline |
+| **Level check** | CEA Kandy station, held-out 2022–2023: bias about −1 % (11 months); satellite level alone +24 % |
 
 ---
 
@@ -77,9 +79,9 @@ PM(x, y, t) = B(t) + max( max(inc, 0), ε ) · P_local(x, y, t)
 
 | symbol | quantity | derivation |
 |---|---|---|
-| `T(t)` | basin temporal anchor | gradient-boosted regression on exogenous drivers, lag-free, conformal-wrapped, re-anchored annually to a satellite area mean |
+| `T(t)` | basin temporal anchor | gradient-boosted regression on exogenous drivers, lag-free, conformal-wrapped, re-anchored annually to a satellite area mean scaled by β = 0.80 (fitted to the CEA Kandy station, 2019 to mid-2021) |
 | `B(t)` | regional background | rural satellite floor scaled by a daily regional shape, constrained so that `B ≤ T` at every hour |
-| `P_local` | local spatial pattern | normalised product of a road-network emission surface, boundary-layer-scaled terrain confinement, and advection–dispersion along mass-consistent diagnostic winds |
+| `P_local` | local spatial pattern | the satellite level surface times boundary-layer-scaled terrain confinement, renormalised to unit mean every hour. The advection–dispersion step (WindNinja winds) was removed in October 2026: on withheld stations in ten cities it lowered rank agreement (0.37 → 0.27). It remains in `kandymodel/transport/` as a scenario. |
 | `ε` | ventilated-hour floor | bounded, mean-zero pattern retention on hours where the accumulation term is negligible |
 
 **The unit-mean constraint.** Since `P_local` integrates to unity over the domain, the
@@ -105,13 +107,13 @@ About **48% of the annual mean is locally generated**, and that figure follows f
 physical constraint rather than an assumption. Local sources emit continuously, so the
 local increment at an emitting location is strictly positive at every hour — rain changes
 removal, not emission — and the background therefore can never reach the total. Imposing
-that constraint yields *f* ≈ 0.48, and the result is insensitive to the one free parameter
-(a fourfold sweep moves it from 0.477 to 0.502). It agrees with three independent lines: a
-coherence floor of ≥0.41 derived from the anchor alone, a hierarchical fit with Kandy held
-out at 0.392, and a national-network instrument at 0.446.
+that constraint yields *f* = 0.483 at baseline; it ranges 0.433–0.492 across the choice of day
+boundary and daily-floor statistic, so it is a property of the decomposition, not a source
+apportionment. The level factor β scales the background and the anchor together, so *f* does
+not depend on it.
 
-Because the field is anchor-locked, the level, exposure and burden are arithmetically
-unchanged by this. What changes is the attribution.
+Because the field is anchor-locked, the level and exposure are arithmetically unchanged by
+this. What changes is the attribution.
 
 ---
 
@@ -121,8 +123,8 @@ The three periods are **not** equally trustworthy, and the model labels them eve
 
 | tier | period | basis |
 |---|---|---|
-| **Anchored** | 2019–2023 | Level pinned to the satellite product. The years the ten-city panel scored. |
-| **Extension** | 2024–2026 | The satellite anchor ends in 2023; level modelled from meteorology. Episode *frequency* is corrected and validated by holding out anchored years; episode *timing* is not. |
+| **Anchored** | 2019–2023 | Level from the satellite product × β (CEA-fitted). The years the ten-city panel scored. |
+| **Extension** | 2024–2026 | The satellite anchor ends in 2023; level modelled from meteorology. Against the CEA station it reads about 40 % low, so its level is uncertain. Episode *frequency* is corrected and validated by holding out anchored years; episode *timing* is not. |
 | **Forecast** | rolling 5 days | A demonstration. No local verification is possible; intervals are deliberately widened. |
 
 ---
@@ -200,15 +202,15 @@ The decisive missing input is a single monitor inside or upwind of the basin.
 
 ```
 kandymodel/            the model package
-├── level.py           satellite area-mean level anchor
+├── level.py           satellite area-mean level × CEA-fitted β (LEVEL_ANCHOR)
 ├── background.py      B(t) regional/transboundary background
 ├── anchor/            T(t) temporal anchor: predict, train
 ├── emission/          emission surface, traffic centrality, diurnal timing
 ├── confinement/       M(x,y,t) terrain confinement
 ├── transport/         terrain advection–dispersion, WindNinja winds
-├── assemble/          decomposition map, additive field (headline)
+├── assemble/          decomposition map; additive_field_v2 (background) and additive_field_v3 (delivered field)
 ├── exposure.py        population weighting
-├── health.py          GEMM attributable burden
+├── health.py          GEMM burden code, retained; the estimate is withdrawn and not run
 ├── validate/          cross-checks against independent products
 └── viz/               map rendering, styling, figure helpers
 scripts/               regenerate_all, nowcast, and build steps

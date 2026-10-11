@@ -2,8 +2,13 @@
 
 Runs the locked chain in order, from the provided intermediate artifacts:
 
-    T(t) anchor -> sharpen -> decomp map -> transport overlay -> spatial UQ
-      -> additive field -> exposure -> health
+    T(t) anchor -> sharpen -> decomp map -> overlay (kept as a scenario) -> spatial UQ
+      -> additive field v2 (coherence-capped background; P = S_emit x M, undispersed)
+      -> additive field v3 (ventilated-hour floor; the delivered field) -> exposure
+
+The annual level is the van Donkelaar basin level times a factor fitted to the Central
+Environmental Authority's Kandy station (kandymodel.level, LEVEL_ANCHOR = "cea_split").
+No attributable-death estimate is produced (withdrawn; see the research framework's thesis).
 
 The static source grids (S_emit, M-confinement, S_traffic, the WindNinja wind
 library) are shipped prebuilt under data/processed/; they are NOT rebuilt here
@@ -39,6 +44,7 @@ def main() -> int:
     a = ap.parse_args()
 
     if True:
+        run("level table (beta x van Donkelaar)", "kandymodel/level.py", "--refresh")
         if a.from_anchor:
             for y in YEARS:
                 run(f"T(t) anchor {y}", "kandymodel/anchor/predict_anchor.py", "--year", str(y))
@@ -47,9 +53,9 @@ def main() -> int:
             run(f"decomp map {y}", "kandymodel/assemble/decomp_map.py", "--year", str(y))
         run("transport overlay (4-factor)", "scripts/build_overlay_predictions.py")
         run("spatial UQ", "scripts/build_spatial_uq.py")
-        run("additive field (headline)", "kandymodel/assemble/additive_field.py")
+        run("additive field v2 (background + undispersed pattern)", "kandymodel/assemble/additive_field_v2.py")
+        run("additive field v3 (delivered field)", "kandymodel/assemble/additive_field_v3.py")
         run("exposure weighting", "kandymodel/exposure.py")
-        run("health burden (GEMM)", "kandymodel/health.py")
         run("seasonal + episodic fields", "scripts/build_seasonal_episodic_fields.py")
 
     print("\nALL DONE — outputs under data/processed/decomp/ and results/figures/")

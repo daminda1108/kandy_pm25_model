@@ -42,7 +42,7 @@ def main():
     ap.add_argument("--label", default=""); a = ap.parse_args()
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     tgt = pd.Timestamp(a.ts, tz="Asia/Colombo"); year = tgt.year; tgtU = tgt.tz_convert("UTC")
-    d = pd.read_parquet(DEC / f"kandy_decomp_predictions_{year}_additive.parquet")
+    d = pd.read_parquet(DEC / f"kandy_decomp_predictions_{year}_additive_v3.parquet")
     d["tutc"] = pd.to_datetime(d.time, utc=True); d["loct"] = d.tutc.dt.tz_convert("Asia/Colombo")
     hrs = pd.to_datetime(np.sort(d.tutc.unique()), utc=True)
     i1 = int(hrs.searchsorted(tgtU)); i0 = max(i1 - 1, 0); i1 = min(i1, len(hrs) - 1)
@@ -55,7 +55,7 @@ def main():
     Z = interp("pm25_q50"); Zhi = interp("pm25_q95"); Zlo = interp("pm25_q05")
 
     # background B this hour (uniform) → local increment
-    B = pd.read_parquet(DEC / f"B_background_hourly_{year}.parquet")
+    B = pd.read_parquet(DEC / f"B_background_hourly_{year}_v2.parquet")
     B["tutc"] = pd.to_datetime(B["time"] if "time" in B else B.iloc[:, 0], utc=True)
     bcol = [c for c in B.columns if c.lower().startswith("b") and B[c].dtype.kind == "f"][0]
     Bv = float((1 - w) * B.loc[B.tutc == t0, bcol].mean() + w * B.loc[B.tutc == t1, bcol].mean())
@@ -150,7 +150,7 @@ def main():
     sub = a.label if a.label else f"{season} {daypart}"
     fig.suptitle(f"Kandy PM$_{{2.5}}$ nowcast — {tgt:%Y-%m-%d %H:%M} local — {sub}", fontsize=9.5)
     pf.square_heatmaps(fig)                                 # canonical: square map panels
-    out = pf.PAPER_OUT / f"NOWCAST_{tgt:%Y%m%d_%H%M}.png"
+    out = pf.FIG_OUT / f"NOWCAST_{tgt:%Y%m%d_%H%M}.png"
     fig.savefig(out, dpi=400, bbox_inches="tight"); plt.close(fig)
     print(f"  basin {basin:.1f}  core {core:.1f}  B {Bv:.1f}  wind {spd:.1f}@{frm:.0f}  BLH {blh:.0f}")
     print(f"wrote {out}")

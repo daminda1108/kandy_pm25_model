@@ -50,6 +50,10 @@ data/processed/decomp/*
 !data/processed/decomp/climatology.npz
 !data/processed/decomp/background_b_annual.csv
 !data/processed/decomp/B_background_hourly_????_v2.parquet
+# 850 hPa back-trajectories: the background builder (additive_field_v2) classes marine/continental days
+!data/processed/decomp/w2/
+data/processed/decomp/w2/*
+!data/processed/decomp/w2/d1_trajectories_850.parquet
 
 !data/processed/pinn_inputs/
 data/processed/pinn_inputs/*

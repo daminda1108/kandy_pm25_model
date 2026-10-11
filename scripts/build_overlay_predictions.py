@@ -27,6 +27,14 @@ from kandymodel.emission.timing import e_at
 DEC = REPO / "data" / "processed" / "decomp"
 YEARS = range(2019, 2024)
 BLH_EDGES = np.array([0, 100, 175, 275, 400, 600, 1000, 5000.0])
+
+# NOTE (2026-07-10): an emission-timing spatial sharpening term (rush-hour core boost
+# tied to S_traffic) was TESTED here and REJECTED on evidence — it pushed the core
+# diurnal amplitude further ABOVE the observed FECT floor (1.30 vs obs 0.72), moved the
+# core/ridge amplitude ratio away from observed (0.41 vs 0.67), barely changed the phase
+# correlation, and reintroduced core<periphery inversions off-peak. Kandy's gentle relief
+# already shows an attenuated-same-phase ridge (obs floor/ridge amp 0.72/0.48), which the
+# unmodified model reproduces (core/ridge 0.92/0.57). Left unmodified. See webapp_v2 plan.
 _LATS, _LONS, _Z, _S, _DX = load_grids()
 _SHAPE_CACHE: dict = {}
 
@@ -75,6 +83,12 @@ def build_year(year, lats16, lons16, bin_means):
         amp = np.clip(e_at(r.lh) * 18.0 / (max(r.wind_speed_10m, 0.3) * max(r.blh_m, 1)), 0, 0.5)
         A = np.clip(1.0 + amp * (shape - 1.0), 0.5, 2.8)
         A_cube[i] = A / A.mean()
+    # A has unit mean, but it multiplies a field that is not uniform (core-high), so the product's mean exceeds
+    # T(t) wherever A and the field overlap: this was the 0.4-0.6 % annual excess of the 4factor field (F.129).
+    # Rescale each hour so the product keeps the hourly basin mean of the field it multiplies.
+    base = pred["pm25_q50"].to_numpy().reshape(nt, 256)
+    A_cube = A_cube.reshape(nt, 256)
+    A_cube = A_cube * (base.mean(axis=1, keepdims=True) / (base * A_cube).mean(axis=1, keepdims=True))
     Aflat = A_cube.reshape(nt * 256)
     for col in ("pm25_q05", "pm25_q50", "pm25_q95"):
         pred[col] = (pred[col].to_numpy() * Aflat).astype(np.float32)
@@ -98,6 +112,7 @@ def main():
     bin_means = {}
     for (s, b), g in pool.groupby(["sector", "bbin"]):
         bin_means[(int(s), int(b))] = (g.u10.mean(), g.v10.mean(), g.blh_m.mean())
+
     print(f"Building 4-factor predictions; {len(bin_means)} (sector×BLH) shape bins.")
     for y in YEARS:
         build_year(y, lats16, lons16, bin_means)

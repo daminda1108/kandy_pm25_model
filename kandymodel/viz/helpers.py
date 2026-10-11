@@ -85,7 +85,7 @@ def save(fig, name, pdf=False, square=True):
 def field(year, kind="additive", col="pm25_q50", hours=None):
     """annual (or hour-subset) mean grid for a prediction field.
     kind: 'additive' (headline turbo), '4factor' (scenario), '' (smooth)."""
-    suf = {"additive": "_additive", "4factor": "_4factor", "smooth": ""}[kind]
+    suf = {"additive": "_additive_v3", "4factor": "_4factor", "smooth": ""}[kind]   # the delivered field (gotcha #86)
     cols = ["time", "lat", "lon", col]
     d = pd.read_parquet(DEC / f"kandy_decomp_predictions_{year}{suf}.parquet", columns=cols)
     if hours is not None:
