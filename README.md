@@ -107,7 +107,7 @@ About **48% of the annual mean is locally generated**, and that figure follows f
 physical constraint rather than an assumption. Local sources emit continuously, so the
 local increment at an emitting location is strictly positive at every hour — rain changes
 removal, not emission — and the background therefore can never reach the total. Imposing
-that constraint yields *f* = 0.483 at baseline; it ranges 0.433–0.492 across the choice of day
+that constraint yields *f* = 0.479 at baseline (f = 1 − mean(B)/mean(T) per year); it ranges 0.428–0.489 across the choice of day
 boundary and daily-floor statistic, so it is a property of the decomposition, not a source
 apportionment. The level factor β scales the background and the anchor together, so *f* does
 not depend on it.
