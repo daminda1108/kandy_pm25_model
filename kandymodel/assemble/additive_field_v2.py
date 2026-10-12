@@ -30,6 +30,25 @@ from kandymodel.background import geoscf_daily_shape
 
 DEC = REPO / "data" / "processed" / "decomp"
 TANCHOR = REPO / "data" / "processed" / "stage1_v3" / "T_anchor"
+
+# Interval widening (2026-10-12, ledger F.137). The spread of T's quantiles about its median is multiplied by k before
+# the split, so each field quantile's basin mean still equals its widened anchor. k is fitted in the research framework
+# (scripts/kandy_interval_widen_fit.py: smallest k giving >= 90 % hourly coverage at the CEA Kandy station cell over
+# 2019-01..2021-06; held-out 2021-07..2023 coverage 87.1 %). A local interval_widening.json overrides it.
+INTERVAL_K_FITTED = 1.55
+
+
+def interval_k() -> float:
+    p = DEC / "interval_widening.json"
+    if p.exists():
+        import json
+        return float(json.loads(p.read_text(encoding="utf-8"))["k"])
+    return INTERVAL_K_FITTED
+
+
+def widen(T05, T50, T95, k=None):
+    k = interval_k() if k is None else k
+    return T50 - k * (T50 - T05), T50 + k * (T95 - T50)
 sys.path.insert(0, str(REPO / "scripts"))
 
 # Seasonal background re-level — BUILT, MEASURED, AND NOT ADOPTED (2026-07-27).
@@ -252,6 +271,7 @@ def assemble_v2(year):
     Ta = Ta.set_index("time")
     m["T50"] = m.time.map(Ta.T_q50); m["T05"] = m.time.map(Ta.T_q05); m["T95"] = m.time.map(Ta.T_q95)
     assert m[["T05", "T50", "T95"]].notna().all().all(), "T(t) missing for some field hours"
+    m["T05"], m["T95"] = widen(m["T05"], m["T50"], m["T95"])          # F.137
     bmap = b.set_index("time")
     m["B"] = m.time.map(bmap["B"]); m["B_lo"] = m.time.map(bmap["B_lo"]); m["B_hi"] = m.time.map(bmap["B_hi"])
     if PATTERN == "undispersed":

@@ -6,8 +6,9 @@
 ![Reproducible](https://img.shields.io/badge/reproducible-inputs%20included-brightgreen.svg)
 
 Hourly PM2.5 at 1 km over the Kandy basin, Sri Lanka, with a nominal 90 % interval (which
-under-covers: about 77 % at the two Kandy low-cost sensors, and 69 % of held-out hours at the CEA
-regulatory station with misses on both sides, so the hourly interval is too narrow) and a population-exposure layer.
+was first too narrow: 69 % of the CEA regulatory station's held-out hours, misses on both sides; widened x1.55 on
+the station's 2019 to mid-2021 hours it now contains 87 % of them) and a population-exposure layer. The hour-of-day
+shape is fitted to the same station (F.137).
 No attributable-death estimate is produced.
 
 **Kandy has one regulatory monitor and two low-cost sensors, and no monitoring network.**
@@ -108,7 +109,7 @@ About **48% of the annual mean is locally generated**, and that figure follows f
 physical constraint rather than an assumption. Local sources emit continuously, so the
 local increment at an emitting location is strictly positive at every hour — rain changes
 removal, not emission — and the background therefore can never reach the total. Imposing
-that constraint yields *f* = 0.479 at baseline (f = 1 − mean(B)/mean(T) per year); it ranges 0.428–0.489 across the choice of day
+that constraint yields *f* = 0.505 at baseline (f = 1 − mean(B)/mean(T) per year); it ranges 0.447–0.518 across the choice of day
 boundary and daily-floor statistic, so it is a property of the decomposition, not a source
 apportionment. The level factor β scales the background and the anchor together, so *f* does
 not depend on it.

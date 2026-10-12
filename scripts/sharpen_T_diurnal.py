@@ -28,8 +28,28 @@ import pandas as pd
 REPO = Path(__file__).resolve().parents[1]
 STG = REPO / "data" / "processed" / "stage1_v3"
 TANCHOR = STG / "T_anchor"
-YEARS = range(2019, 2025)
+YEARS = range(2019, 2024)          # the years predict_T_anchor_v3 regenerates (the guard below needs fresh files)
 QCOLS = ["T_q05", "T_q50", "T_q95", "T_q05_preanchor", "T_q50_preanchor", "T_q95_preanchor"]
+# Hour-of-day shape (2026-10-12, F.137). The FECT low-cost record sets the month cycle and the starting hour cycle; the
+# hour cycle is then reshaped by factors fitted to the CEA regulatory station on 2019-01 -> 2021-06 and checked on later
+# days (kandy_diurnal_cea_scenario.py; spec docs/diurnal_and_interval_widening_spec_2026-10-12.md). The FECT nights run
+# high against the station (night/midday 1.12 against 0.78), consistent with the constant-humidity conversion of that
+# record. "fect" reverts to the FECT-only shape. The factors file is required: no silent fallback.
+DIURNAL_TARGET = "cea_split"
+DEC = REPO / "data" / "processed" / "decomp"
+
+
+# Fitted in the research framework (scripts/kandy_diurnal_cea_scenario.py --write-r, CEA AAQMS hourly 2019-01..2021-06,
+# adopted under a pre-specified held-out rule); used when the json above is not present.
+CEA_R_FITTED = {"0": 0.7733351760437992, "1": 0.8185090377906581, "2": 0.8136671268959357, "3": 0.8110208965787584, "4": 0.8322933523162823, "5": 0.8696774260415481, "6": 1.0003609296366347, "7": 1.167993551777954, "8": 1.332885011512918, "9": 1.3068850987815308, "10": 1.1417766613128997, "11": 1.0857924321116441, "12": 1.0559653110132607, "13": 1.1232117072683965, "14": 1.236454035505752, "15": 1.2429812637026059, "16": 1.1751380868253878, "17": 0.9761717103909889, "18": 1.0036261662180042, "19": 0.9771034267485151, "20": 0.9192511262802014, "21": 0.8194409954251374, "22": 0.7998045375090485, "23": 0.7837759925667409}
+
+
+def _cea_r():
+    p = DEC / "diurnal_cea_r.json"
+    if not p.exists():
+        return {int(k): float(v) for k, v in CEA_R_FITTED.items()}
+    import json
+    return {int(k): float(v) for k, v in json.loads(p.read_text(encoding="utf-8"))["r_by_local_hour"].items()}
 
 
 def _obs_norm(by):
@@ -52,6 +72,11 @@ def main():
         if not p.exists():
             continue
         T = pd.read_parquet(p)
+        # Not idempotent (2026-10-12): the hour factors are per-year ratios of the CURRENT climatology, so sharpening an
+        # already-sharpened anchor moves it again by up to ~3 %. The step runs once, straight after predict_T_anchor_v3,
+        # and marks its output; a second run refuses unless --force (then it is a deliberate double application).
+        if "sharpened" in T.columns and "--force" not in sys.argv:
+            raise SystemExit(f"{p.name} is already sharpened; rerun predict_T_anchor_v3 first (or pass --force)")
         tl = pd.to_datetime(T["datetime_utc"], utc=True).dt.tz_convert("Asia/Colombo")
         T["_h"] = tl.dt.hour; T["_m"] = tl.dt.month
         cols = [c for c in QCOLS if c in T.columns]
@@ -62,13 +87,17 @@ def main():
         mm = T.groupby("_m")["T_q50"].mean(); mm /= mm.mean()
         km = (obs_m / mm); km /= (km * mm).sum() / mm.sum()
         kv = T["_h"].map(kh.to_dict()).values * T["_m"].map(km.to_dict()).values
+        if DIURNAL_TARGET == "cea_split":
+            kv = kv * T["_h"].map(_cea_r()).values
+        elif DIURNAL_TARGET != "fect":
+            raise ValueError(DIURNAL_TARGET)
         for c in cols:
             T[c] = T[c].values * kv
         scale = orig / float(T["T_q50"].mean())                       # re-anchor annual level
         for c in cols:
             T[c] = T[c] * scale
         sm = T.groupby("_m")["T_q50"].mean() / T["T_q50"].mean()
-        T = T.drop(columns=["_h", "_m"]); T.to_parquet(p, index=False)
+        T = T.drop(columns=["_h", "_m"]); T["sharpened"] = DIURNAL_TARGET; T.to_parquet(p, index=False)
         print(f"  {y}: Mar {sm[3]:.2f} Aug {sm[8]:.2f} (swing {sm.max()/sm.min():.2f}x)  "
               f"annual mean {orig:.2f}->{T['T_q50'].mean():.2f}")
     print("\nT_anchor sharpened (diurnal+seasonal). Re-run: build_decomp_map -> build_overlay_predictions"
