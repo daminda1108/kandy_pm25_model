@@ -6,7 +6,8 @@
 ![Reproducible](https://img.shields.io/badge/reproducible-inputs%20included-brightgreen.svg)
 
 Hourly PM2.5 at 1 km over the Kandy basin, Sri Lanka, with a nominal 90 % interval (which
-under-covers: about 77 % at the two Kandy low-cost sensors) and a population-exposure layer.
+under-covers: about 77 % at the two Kandy low-cost sensors, and 69 % of held-out hours at the CEA
+regulatory station with misses on both sides, so the hourly interval is too narrow) and a population-exposure layer.
 No attributable-death estimate is produced.
 
 **Kandy has one regulatory monitor and two low-cost sensors, and no monitoring network.**
